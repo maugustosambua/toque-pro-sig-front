@@ -1,11 +1,15 @@
 ﻿<?php
 // Impede acesso directo
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
     exit;
 }
 
-// Tab activa
-$tab = $_GET['tab'] ?? 'ui';
+// Tab activa (sanitize + whitelist)
+$tab = isset($_GET['tab']) ? sanitize_key(wp_unslash($_GET['tab'])) : 'ui';
+$allowed_tabs = array( 'ui', 'company', 'tax', 'numbering' );
+if (! in_array($tab, $allowed_tabs, true)) {
+    $tab = 'ui';
+}
 ?>
 
 <div class="wrap">
@@ -36,23 +40,23 @@ $tab = $_GET['tab'] ?? 'ui';
 
         <?php
         // Campos de segurança da API de configurações
-        settings_fields( 'tps_settings' );
+        settings_fields('tps_settings');
 
         // Secções conforme tab activa
-        if ( $tab === 'ui' ) {
-            do_settings_sections( 'tps-settings-ui' );
+        if ($tab === 'ui') {
+            do_settings_sections('tps-settings-ui');
         }
 
-        if ( $tab === 'company' ) {
-            do_settings_sections( 'tps-settings-company' );
+        if ($tab === 'company') {
+            do_settings_sections('tps-settings-company');
         }
 
-        if ( $tab === 'tax' ) {
-            do_settings_sections( 'tps-settings-tax' );
+        if ($tab === 'tax') {
+            do_settings_sections('tps-settings-tax');
         }
 
-        if ( $tab === 'numbering' ) {
-            do_settings_sections( 'tps-settings-numbering' );
+        if ($tab === 'numbering') {
+            do_settings_sections('tps-settings-numbering');
         }
 
         // Botão guardar

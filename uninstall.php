@@ -1,5 +1,6 @@
 <?php
-if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+
+if (! defined('WP_UNINSTALL_PLUGIN')) {
     exit;
 }
 
@@ -12,9 +13,9 @@ $tables = array(
     $wpdb->prefix . 'tps_document_lines',
 );
 
-foreach ( $tables as $table ) {
-    $wpdb->query( "DROP TABLE IF EXISTS {$table}" );
+foreach ($tables as $table) {
+    $wpdb->query("DROP TABLE IF EXISTS {$table}");
 }
 
 // Remove as opções do plugin.
-delete_option( 'tps_settings' );
+delete_option('tps_settings');

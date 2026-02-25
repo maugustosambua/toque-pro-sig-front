@@ -1,0 +1,8 @@
+{
+  "intelephense.environment.includePaths": [
+    "${workspaceFolder}/../../../wp-includes",
+    "${workspaceFolder}/../../../wp-admin",
+    "${workspaceFolder}/vendor"
+  ],
+  "intelephense.files.maxSize": 5000000
+}

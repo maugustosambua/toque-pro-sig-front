@@ -1,35 +1,35 @@
 <?php // modules/customers/customers-import-view.php
 // Impede acesso directo
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
     exit;
 }
 
-$error = isset( $_GET['error'] ) ? sanitize_text_field( $_GET['error'] ) : '';
-$col   = isset( $_GET['col'] ) ? sanitize_text_field( $_GET['col'] ) : '';
+$error = isset($_GET['error']) ? sanitize_text_field($_GET['error']) : '';
+$col   = isset($_GET['col']) ? sanitize_text_field($_GET['col']) : '';
 ?>
 
 <div class="wrap">
     <h1 class="wp-heading-inline">Import Customers</h1>
     <hr class="wp-header-end">
 
-    <?php if ( $error ) : ?>
+    <?php if ($error) : ?>
         <div class="notice notice-error is-dismissible">
             <p>
                 <?php
-                if ( $error === 'no_file' ) {
-                    echo esc_html( 'No file uploaded.' );
-                } elseif ( $error === 'invalid_file_type' ) {
-                    echo esc_html( 'Invalid file type. Please upload a .csv file.' );
-                } elseif ( $error === 'unable_to_open' ) {
-                    echo esc_html( 'Unable to open the file.' );
-                } elseif ( $error === 'empty_file' ) {
-                    echo esc_html( 'The uploaded file is empty.' );
-                } elseif ( $error === 'invalid_header' ) {
-                    echo esc_html( 'Invalid CSV header. Please check the first row.' );
-                } elseif ( $error === 'missing_column' && $col ) {
-                    echo esc_html( 'Missing required column: ' . $col );
+                if ($error === 'no_file') {
+                    echo esc_html('No file uploaded.');
+                } elseif ($error === 'invalid_file_type') {
+                    echo esc_html('Invalid file type. Please upload a .csv file.');
+                } elseif ($error === 'unable_to_open') {
+                    echo esc_html('Unable to open the file.');
+                } elseif ($error === 'empty_file') {
+                    echo esc_html('The uploaded file is empty.');
+                } elseif ($error === 'invalid_header') {
+                    echo esc_html('Invalid CSV header. Please check the first row.');
+                } elseif ($error === 'missing_column' && $col) {
+                    echo esc_html('Missing required column: ' . $col);
                 } else {
-                    echo esc_html( 'Import failed. Please try again.' );
+                    echo esc_html('Import failed. Please try again.');
                 }
                 ?>
             </p>
@@ -57,10 +57,9 @@ $col   = isset( $_GET['col'] ) ? sanitize_text_field( $_GET['col'] ) : '';
 
         <form method="post"
               enctype="multipart/form-data"
-              action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-
+              action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
             <input type="hidden" name="action" value="tps_import_customers">
-            <?php wp_nonce_field( 'tps_import_customers' ); ?>
+            <?php wp_nonce_field('tps_import_customers'); ?>
 
             <div id="tps-drop-zone" class="upload-drag-drop">
                 <strong>Click to select a CSV file</strong><br>
@@ -79,8 +78,7 @@ $col   = isset( $_GET['col'] ) ? sanitize_text_field( $_GET['col'] ) : '';
             <p id="tps-file-name" class="description"></p>
 
             <p id="tps-file-error" class="description" hidden></p>
-
-            <?php submit_button( 'Import Customers', 'primary large', 'submit', false, array( 'id' => 'tps-import-submit', 'disabled' => 'disabled' ) ); ?>
+            <?php submit_button('Import Customers', 'primary large', 'submit', false, array( 'id' => 'tps-import-submit', 'disabled' => 'disabled' )); ?>
 
         </form>
     </div>

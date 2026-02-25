@@ -1,6 +1,6 @@
 <?php
 // Impede acesso directo
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
     exit;
 }
 
@@ -11,10 +11,9 @@ $list_table->prepare_items();
 <div class="wrap">
     <h1 class="wp-heading-inline">Documents</h1>
 
-    <a href="<?php echo esc_url( admin_url( 'admin.php?page=tps-documents-add' ) ); ?>" class="page-title-action">
+    <a href="<?php echo esc_url(admin_url('admin.php?page=tps-documents-add')); ?>" class="page-title-action">
         Add New
     </a>
-
     <hr class="wp-header-end">
 
     <form method="get">

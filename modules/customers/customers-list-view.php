@@ -1,6 +1,6 @@
 <?php // modules/customers/customers-list-view.php
 // Impede acesso directo
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
     exit;
 }
 
@@ -12,10 +12,10 @@ $export_url = wp_nonce_url(
     add_query_arg(
         array(
             'action' => 'tps_export_customers',
-            'type'   => isset( $_GET['type'] ) ? sanitize_text_field( $_GET['type'] ) : '',
-            's'      => isset( $_GET['s'] ) ? sanitize_text_field( $_GET['s'] ) : '',
+            'type'   => isset($_GET['type']) ? sanitize_text_field($_GET['type']) : '',
+            's'      => isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '',
         ),
-        admin_url( 'admin-post.php' )
+        admin_url('admin-post.php')
     ),
     'tps_export_customers'
 );
@@ -24,12 +24,12 @@ $export_url = wp_nonce_url(
 <div class="wrap">
 
     <?php
-    $imported = isset( $_GET['imported'] ) ? (int) $_GET['imported'] : 0;
-    $skipped_duplicates = isset( $_GET['skipped_duplicates'] ) ? (int) $_GET['skipped_duplicates'] : 0;
-    $skipped_invalid = isset( $_GET['skipped_invalid'] ) ? (int) $_GET['skipped_invalid'] : 0;
+    $imported = isset($_GET['imported']) ? (int) $_GET['imported'] : 0;
+    $skipped_duplicates = isset($_GET['skipped_duplicates']) ? (int) $_GET['skipped_duplicates'] : 0;
+    $skipped_invalid = isset($_GET['skipped_invalid']) ? (int) $_GET['skipped_invalid'] : 0;
 
-    if ( $imported || $skipped_duplicates || $skipped_invalid ) :
-    ?>
+    if ($imported || $skipped_duplicates || $skipped_invalid) :
+        ?>
         <div class="notice notice-success is-dismissible">
             <p>
                 Import finished:
@@ -42,15 +42,14 @@ $export_url = wp_nonce_url(
 
     <h1 class="wp-heading-inline">Customers</h1>
 
-    <a href="<?php echo esc_url( admin_url( 'admin.php?page=tps-customers-add' ) ); ?>" class="page-title-action">
+    <a href="<?php echo esc_url(admin_url('admin.php?page=tps-customers-add')); ?>" class="page-title-action">
         Add New
     </a>
-
-    <a href="<?php echo esc_url( admin_url( 'admin.php?page=tps-customers-import' ) ); ?>" class="page-title-action">
+    <a href="<?php echo esc_url(admin_url('admin.php?page=tps-customers-import')); ?>" class="page-title-action">
         Import
     </a>
 
-    <a href="<?php echo esc_url( $export_url ); ?>" class="page-title-action">
+    <a href="<?php echo esc_url($export_url); ?>" class="page-title-action">
         Export
     </a>
 
@@ -59,7 +58,7 @@ $export_url = wp_nonce_url(
     <form method="get">
         <input type="hidden" name="page" value="tps-customers">
 
-        <?php $list_table->search_box( 'Search Customers', 'tps-customers' ); ?>
+        <?php $list_table->search_box('Search Customers', 'tps-customers'); ?>
 
         <?php $list_table->views(); ?>
 

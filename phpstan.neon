@@ -1,0 +1,12 @@
+parameters:
+  level: 5
+  paths:
+    - %currentWorkingDirectory%
+  excludes_analyse:
+    - %currentWorkingDirectory%/vendor
+  autoload_files:
+    - %currentWorkingDirectory%/vendor/autoload.php
+  scanFiles:
+    - %currentWorkingDirectory%/vendor/autoload.php
+
+# You can run: vendor/bin/phpstan analyse -c phpstan.neon

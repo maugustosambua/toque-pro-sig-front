@@ -1,5 +1,11 @@
 {
     "require": {
         "mpdf/mpdf": "^8.2"
+    },
+    "require-dev": {
+        "squizlabs/php_codesniffer": "^4.0",
+        "php-stubs/wordpress-stubs": "^6.9",
+        "phpstan/phpstan": "*",
+        "vimeo/psalm": "*"
     }
 }

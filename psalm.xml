@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<psalm
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/vimeo/psalm/master/config.xsd"
+>
+  <projectFiles>
+    <directory name="."/>
+    <ignoreFiles>
+      <directory name="vendor" />
+    </ignoreFiles>
+  </projectFiles>
+
+  <plugins />
+
+  <autoloadFiles>
+    <file>vendor/autoload.php</file>
+  </autoloadFiles>
+
+  <issueHandlers>
+    <AllInstancesSatisfyType errorLevel="info" />
+  </issueHandlers>
+
+</psalm>

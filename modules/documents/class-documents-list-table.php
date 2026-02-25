@@ -160,13 +160,32 @@ class TPS_Documents_List_Table extends WP_List_Table {
         // Itens por página
         $per_page = tps_get_per_page();
 
-        // Ordenação
-        $orderby = $_GET['orderby'] ?? 'number';
-        $order   = $_GET['order'] ?? 'DESC';
+        // Ordenação (sanitize + whitelist)
+        $orderby = isset( $_GET['orderby'] ) ? sanitize_text_field( wp_unslash( $_GET['orderby'] ) ) : 'number';
+        $order   = isset( $_GET['order'] ) ? strtoupper( sanitize_text_field( wp_unslash( $_GET['order'] ) ) ) : 'DESC';
 
-        // Filtros activos
-        $type   = $_GET['doc_type'] ?? '';
-        $status = $_GET['status'] ?? '';
+        // Filtros activos (sanitize + validate)
+        $type   = isset( $_GET['doc_type'] ) ? sanitize_text_field( wp_unslash( $_GET['doc_type'] ) ) : '';
+        $status = isset( $_GET['status'] ) ? sanitize_text_field( wp_unslash( $_GET['status'] ) ) : '';
+
+        // Valida order e orderby
+        $allowed_orderbys = array( 'number', 'type', 'issue_date' );
+        if ( ! in_array( $orderby, $allowed_orderbys, true ) ) {
+            $orderby = 'number';
+        }
+
+        $order = $order === 'ASC' ? 'ASC' : 'DESC';
+
+        // Valida tipo/status usando model helpers quando possível
+        $allowed_types = array_keys( TPS_Documents_Model::types() );
+        if ( $type !== '' && ! in_array( $type, $allowed_types, true ) ) {
+            $type = '';
+        }
+
+        $allowed_statuses = array_keys( TPS_Documents_Model::statuses() );
+        if ( $status !== '' && ! in_array( $status, $allowed_statuses, true ) ) {
+            $status = '';
+        }
 
         // Argumentos comuns
         $args = array(
