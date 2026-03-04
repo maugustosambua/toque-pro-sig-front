@@ -15,21 +15,15 @@ class TPS_Documents_Model {
     // Tipos de documento suportados
     public static function types() {
         return array(
-            'invoice'   => 'Invoice',
-            'vd'        => 'Sales Receipt',
-            'quotation' => 'Quotation',
+            'invoice'   => 'Fatura',
+            'vd'        => 'Venda a Dinheiro',
+            'quotation' => 'Cotação',
         );
     }
 
     // Verifica se tipo é válido
     public static function is_valid_type( $type ) {
         return array_key_exists( $type, self::types() );
-    }
-
-    // Retorna label do tipo
-    public static function type_label( $type ) {
-        $types = self::types();
-        return $types[ $type ] ?? '';
     }
 
     // Retorna documentos com filtros
@@ -43,30 +37,54 @@ class TPS_Documents_Model {
             'offset'   => 0,
             'type'     => null,
             'status'   => null,
+            'search'   => '',
         );
 
         $args = wp_parse_args( $args, $defaults );
         $where = array();
 
         if ( $args['type'] ) {
-            $where[] = $wpdb->prepare( 'type = %s', $args['type'] );
+            $where[] = $wpdb->prepare( 'd.type = %s', $args['type'] );
         }
 
         if ( $args['status'] ) {
-            $where[] = $wpdb->prepare( 'status = %s', $args['status'] );
+            $where[] = $wpdb->prepare( 'd.status = %s', $args['status'] );
         }
 
-        $allowed = array( 'number', 'type', 'issue_date' );
-        $orderby = in_array( $args['orderby'], $allowed, true ) ? $args['orderby'] : 'number';
+        if ( ! empty( $args['search'] ) ) {
+            $like = '%' . $wpdb->esc_like( $args['search'] ) . '%';
+            $where[] = $wpdb->prepare(
+                '(CAST(d.number AS CHAR) LIKE %s OR d.type LIKE %s OR c.name LIKE %s OR c.nuit LIKE %s)',
+                $like,
+                $like,
+                $like,
+                $like
+            );
+        }
+
+        $allowed = array(
+            'number'        => 'd.number',
+            'type'          => 'd.type',
+            'issue_date'    => 'd.issue_date',
+            'customer_name' => 'c.name',
+            'customer_city' => 'c.city',
+        );
+        $orderby = isset( $allowed[ $args['orderby'] ] ) ? $allowed[ $args['orderby'] ] : 'd.number';
         $order   = $args['order'] === 'ASC' ? 'ASC' : 'DESC';
 
-        $sql = 'SELECT * FROM ' . self::table();
+        $customers_table = TPS_Customers_Model::table();
+        $sql = 'SELECT d.*, c.name AS customer_name, c.nuit AS customer_nuit, c.email AS customer_email, c.phone AS customer_phone
+                FROM ' . self::table() . ' d
+                LEFT JOIN ' . $customers_table . ' c ON c.id = d.customer_id';
 
         if ( $where ) {
             $sql .= ' WHERE ' . implode( ' AND ', $where );
         }
 
         $sql .= " ORDER BY {$orderby} {$order}";
+        if ( 'd.issue_date' === $orderby ) {
+            $sql .= ", d.id {$order}";
+        }
         $sql .= $wpdb->prepare( ' LIMIT %d OFFSET %d', $args['per_page'], $args['offset'] );
 
         return $wpdb->get_results( $sql );
@@ -79,14 +97,27 @@ class TPS_Documents_Model {
         $where = array();
 
         if ( ! empty( $args['type'] ) ) {
-            $where[] = $wpdb->prepare( 'type = %s', $args['type'] );
+            $where[] = $wpdb->prepare( 'd.type = %s', $args['type'] );
         }
 
         if ( ! empty( $args['status'] ) ) {
-            $where[] = $wpdb->prepare( 'status = %s', $args['status'] );
+            $where[] = $wpdb->prepare( 'd.status = %s', $args['status'] );
         }
 
-        $sql = 'SELECT COUNT(*) FROM ' . self::table();
+        $join = '';
+        if ( ! empty( $args['search'] ) ) {
+            $like = '%' . $wpdb->esc_like( $args['search'] ) . '%';
+            $join = ' LEFT JOIN ' . TPS_Customers_Model::table() . ' c ON c.id = d.customer_id';
+            $where[] = $wpdb->prepare(
+                '(CAST(d.number AS CHAR) LIKE %s OR d.type LIKE %s OR c.name LIKE %s OR c.nuit LIKE %s)',
+                $like,
+                $like,
+                $like,
+                $like
+            );
+        }
+
+        $sql = 'SELECT COUNT(*) FROM ' . self::table() . ' d' . $join;
 
         if ( $where ) {
             $sql .= ' WHERE ' . implode( ' AND ', $where );
@@ -135,19 +166,23 @@ class TPS_Documents_Model {
     // Estados suportados
     public static function statuses() {
         return array(
-            'draft'     => 'Draft',
-            'issued'    => 'Issued',
-            'cancelled' => 'Cancelled',
+            'draft'     => 'Rascunho',
+            'issued'    => 'Emitido',
+            'cancelled' => 'Cancelado',
         );
     }
 
     // Retorna um documento
     public static function get( $id ) {
         global $wpdb;
+        $customers_table = TPS_Customers_Model::table();
 
         return $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT * FROM " . self::table() . " WHERE id = %d",
+                "SELECT d.*, c.name AS customer_name, c.nuit AS customer_nuit, c.email AS customer_email, c.phone AS customer_phone, c.address AS customer_address, c.city AS customer_city
+                FROM " . self::table() . " d
+                LEFT JOIN {$customers_table} c ON c.id = d.customer_id
+                WHERE d.id = %d",
                 $id
             )
         );

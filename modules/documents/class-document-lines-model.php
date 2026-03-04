@@ -74,17 +74,6 @@ class TPS_Document_Lines_Model {
         );
     }
 
-    // Remove linhas de um documento
-    public static function delete_by_document( $document_id ) {
-        global $wpdb;
-
-        return $wpdb->delete(
-            self::table(),
-            array( 'document_id' => (int) $document_id ),
-            array( '%d' )
-        );
-    }
-
     // Calcula subtotal de uma linha
     public static function line_total( $line ) {
         return (float) $line->quantity * (float) $line->unit_price;

@@ -47,7 +47,7 @@ class TPS_Customers_Model
     private static function build_order($args)
     {
 
-        $allowed = array( 'name', 'type', 'created_at' );
+        $allowed = array( 'name', 'city', 'type', 'created_at' );
 
         $orderby = ! empty($args['orderby']) && in_array($args['orderby'], $allowed, true)
             ? $args['orderby']
@@ -56,6 +56,10 @@ class TPS_Customers_Model
         $order = ( ! empty($args['order']) && strtoupper($args['order']) === 'DESC' )
             ? 'DESC'
             : 'ASC';
+
+        if ( 'created_at' === $orderby ) {
+            return " ORDER BY {$orderby} {$order}, id {$order}";
+        }
 
         return " ORDER BY {$orderby} {$order}";
     }
@@ -179,28 +183,6 @@ class TPS_Customers_Model
         $sql .= self::build_where($args);
 
         return (int) $wpdb->get_var($sql);
-    }
-
-    // Retorna clientes por IDs
-    public static function get_by_ids($ids)
-    {
-        global $wpdb;
-
-        $ids = array_map('intval', (array) $ids);
-        $ids = array_filter($ids);
-
-        if (empty($ids)) {
-            return array();
-        }
-
-        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
-
-        $sql = $wpdb->prepare(
-            "SELECT * FROM " . self::table() . " WHERE id IN ($placeholders)",
-            $ids
-        );
-
-        return $wpdb->get_results($sql);
     }
 
     // Verifica se existe cliente com o mesmo NUIT + Nome

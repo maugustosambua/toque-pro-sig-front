@@ -25,25 +25,40 @@ $total    = $subtotal + $iva;
 $settings = get_option('tps_settings', array());
 $company  = $settings['company_name'] ?? '';
 $nuit     = $settings['company_nuit'] ?? '';
+$type_labels = TPS_Documents_Model::types();
+$status_labels = TPS_Documents_Model::statuses();
+$back_url = admin_url('admin.php?page=tps-documents-add&document_id=' . (int) $document_id);
 ?>
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="utf-8">
-        <title>Document <?php echo esc_html($document->number); ?></title>
+        <title>Documento <?php echo esc_html($document->number); ?></title>
 
         <style>
-            body { font-family: Arial, sans-serif; font-size: 12px; }
-            .wrap { max-width: 800px; margin: 0 auto; }
-            .header { display:flex; justify-content:space-between; margin-bottom:20px; }
-            .box { border:1px solid #ccc; padding:10px; margin-bottom:10px; }
+            body { font-family: "Segoe UI", Arial, sans-serif; font-size: 12px; color: #1a2433; background: #f4f7fb; }
+            .wrap { max-width: 860px; margin: 20px auto; background: #fff; border: 1px solid #dde5ef; border-radius: 12px; padding: 18px; }
+            .toolbar { margin-bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+            .toolbar button { border: 1px solid #0f5ea8; background: #0f5ea8; color: #fff; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all .16s ease; }
+            .toolbar button:hover { transform: translateY(-1px); box-shadow: 0 8px 16px rgba(26, 36, 51, .10); background: #0d528f; border-color: #0d528f; }
+            .toolbar button:focus-visible { outline: 2px solid #0f5ea8; outline-offset: 2px; }
+            .toolbar .back-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #dde5ef; background: #fff; color: #1a2433; border-radius: 999px; padding: 8px 12px; text-decoration: none; font-weight: 600; line-height: 1; transition: all .16s ease; }
+            .toolbar .back-btn:hover { border-color: #b8cbe3; background: #f6faff; color: #123f67; transform: translateY(-1px); }
+            .toolbar .back-btn:focus-visible { outline: 2px solid #0f5ea8; outline-offset: 2px; }
+            .toolbar .back-btn svg { width: 14px; height: 14px; }
+            .header { display:flex; justify-content:space-between; margin-bottom:18px; background: linear-gradient(115deg, #f8fbff 0%, #edf4fc 55%, #e4edf8 100%); border: 1px solid #dde5ef; border-radius: 10px; padding: 12px; }
+            .meta h2 { margin: 0 0 4px; }
+            .meta div { color: #5f6b7a; }
+            .box { border:1px solid #dde5ef; border-radius: 10px; padding:10px; margin-bottom:12px; background: #fff; }
             table { width:100%; border-collapse:collapse; margin-top:10px; }
-            th, td { border:1px solid #ccc; padding:8px; }
-            th { text-align:left; }
+            th, td { border:1px solid #dde5ef; padding:8px; }
+            th { text-align:left; background: #f8fbff; }
             .right { text-align:right; }
-            .totals { max-width: 300px; margin-left:auto; }
+            .totals { max-width: 320px; margin-left:auto; margin-top: 14px; }
             @media print {
                 .no-print { display:none; }
+                body { background: #fff; }
+                .wrap { margin: 0 auto; border: 0; border-radius: 0; padding: 0; }
             }
         </style>
     </head>
@@ -51,34 +66,48 @@ $nuit     = $settings['company_nuit'] ?? '';
     <body>
         <div class="wrap">
 
-            <div class="no-print" style="margin-bottom:15px;">
-                <button onclick="window.print()">Print / Save as PDF</button>
+            <div class="no-print toolbar">
+                <a class="back-btn" href="<?php echo esc_url($back_url); ?>">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.7 5.3a1 1 0 0 1 0 1.4L10.41 11H20a1 1 0 1 1 0 2h-9.59l4.3 4.3a1 1 0 0 1-1.42 1.4l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 1.41 0Z"/></svg>
+                    <span>Voltar</span>
+                </a>
+                <button onclick="window.print()">Imprimir / Guardar como PDF</button>
             </div>
 
             <div class="header">
-                <div>
+                <div class="meta">
                     <h2><?php echo esc_html($company); ?></h2>
                     <div>NUIT: <?php echo esc_html($nuit); ?></div>
                 </div>
 
-                <div class="right">
-                    <h2><?php echo esc_html(strtoupper($document->type)); ?></h2>
-                    <div><strong>Number:</strong> <?php echo esc_html($document->number); ?></div>
-                    <div><strong>Date:</strong> <?php echo esc_html($document->issue_date); ?></div>
-                    <div><strong>Status:</strong> <?php echo esc_html($document->status); ?></div>
+                <div class="right meta">
+                    <h2><?php echo esc_html((string) ($type_labels[$document->type] ?? strtoupper($document->type))); ?></h2>
+                    <div><strong>Número:</strong> <?php echo esc_html($document->number); ?></div>
+                    <div><strong>Data:</strong> <?php echo esc_html($document->issue_date); ?></div>
+                    <div><strong>Estado:</strong> <?php echo esc_html((string) ($status_labels[$document->status] ?? $document->status)); ?></div>
                 </div>
             </div>
 
             <div class="box">
-                <strong>Customer ID:</strong> <?php echo esc_html($document->customer_id); ?>
+                <div><strong>Cliente:</strong> <?php echo esc_html((string) ($document->customer_name ?: ('#' . (int) $document->customer_id))); ?></div>
+                <?php if (! empty($document->customer_nuit)) : ?>
+                    <div><strong>NUIT do Cliente:</strong> <?php echo esc_html((string) $document->customer_nuit); ?></div>
+                <?php endif; ?>
+                <?php if (! empty($document->customer_email)) : ?>
+                    <div><strong>Email:</strong> <?php echo esc_html((string) $document->customer_email); ?></div>
+                <?php endif; ?>
+                <?php if (! empty($document->customer_phone)) : ?>
+                    <div><strong>Telefone:</strong> <?php echo esc_html((string) $document->customer_phone); ?></div>
+                <?php endif; ?>
+                <div><strong>ID do Cliente:</strong> <?php echo esc_html((string) $document->customer_id); ?></div>
             </div>
 
             <table>
                 <thead>
                 <tr>
-                    <th>Description</th>
-                    <th class="right" style="width:90px;">Qty</th>
-                    <th class="right" style="width:120px;">Unit</th>
+                    <th>Descrição</th>
+                    <th class="right" style="width:90px;">Qtd.</th>
+                    <th class="right" style="width:120px;">Unitário</th>
                     <th class="right" style="width:120px;">Subtotal</th>
                 </tr>
                 </thead>

@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Toque Pro SiG
- * Description: Sistema de Gestão e Facturação
+ * Description: Sistema de Gestão e Faturação
  * Author: Toque Pro Lda.
  * Version: 1.0.0
  */

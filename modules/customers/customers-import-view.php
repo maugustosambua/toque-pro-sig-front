@@ -4,88 +4,176 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-$error = isset($_GET['error']) ? sanitize_text_field($_GET['error']) : '';
-$col   = isset($_GET['col']) ? sanitize_text_field($_GET['col']) : '';
+$back_url = admin_url('admin.php?page=tps-customers');
 ?>
 
-<div class="wrap">
-    <h1 class="wp-heading-inline">Import Customers</h1>
-    <hr class="wp-header-end">
+<style>
+    .tps-import-modern {
+        --tps-panel: #ffffff;
+        --tps-border: #dde5ef;
+        --tps-text: #1a2433;
+        --tps-text-muted: #5f6b7a;
+        --tps-accent: #0f5ea8;
+        --tps-accent-soft: #e7f2ff;
+        margin-top: 14px;
+    }
+    .tps-import-modern .tps-header {
+        background: linear-gradient(115deg, #f8fbff 0%, #edf4fc 55%, #e4edf8 100%);
+        border: 1px solid var(--tps-border);
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin-bottom: 16px;
+    }
+    .tps-import-modern .tps-header-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .tps-import-modern .tps-header-content {
+        min-width: 0;
+    }
+    .tps-import-modern h1 {
+        margin: 0;
+        color: var(--tps-text);
+    }
+    .tps-import-modern .tps-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--tps-border);
+        border-radius: 999px;
+        padding: 6px 12px;
+        text-decoration: none;
+        color: var(--tps-text);
+        background: #fff;
+        font-weight: 600;
+        line-height: 1;
+        transition: all .16s ease;
+    }
+    .tps-import-modern .tps-back-btn:hover { border-color: #b8cbe3; background: #f6faff; color: #123f67; transform: translateY(-1px); }
+    .tps-import-modern .tps-back-btn:focus-visible { outline: 2px solid #0f5ea8; outline-offset: 2px; }
+    .tps-import-modern .tps-back-btn .dashicons {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+    }
+    .tps-import-modern .tps-subtitle {
+        margin: 6px 0 0;
+        color: var(--tps-text-muted);
+    }
+    .tps-import-modern .tps-grid {
+        display: grid;
+        grid-template-columns: 1.2fr .8fr;
+        gap: 14px;
+    }
+    .tps-import-modern .tps-card {
+        background: var(--tps-panel);
+        border: 1px solid var(--tps-border);
+        border-radius: 12px;
+        padding: 14px;
+        transition: all .16s ease;
+    }
+    .tps-import-modern .tps-card:hover { border-color: #c7d5e7; box-shadow: 0 8px 16px rgba(26, 36, 51, .06); }
+    .tps-import-modern .tps-title-sm {
+        margin: 0 0 10px;
+        font-size: 16px;
+        color: var(--tps-text);
+    }
+    .tps-import-modern .tps-list {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--tps-text-muted);
+    }
+    .tps-import-modern .tps-list li { transition: all .16s ease; border-radius: 6px; padding: 2px 4px; }
+    .tps-import-modern .tps-list li:hover { background: #f8fbff; color: #3f5676; }
+    .tps-import-modern #tps-drop-zone {
+        border: 2px dashed #bdd0e5;
+        background: #f8fbff;
+        border-radius: 12px;
+        padding: 22px;
+        text-align: center;
+        cursor: pointer;
+        transition: all .16s ease;
+    }
+    .tps-import-modern #tps-drop-zone:hover {
+        border-color: #9fb8d6;
+        background: #f2f8ff;
+    }
+    .tps-import-modern #tps-drop-zone.is-dragging {
+        border-color: var(--tps-accent);
+        background: var(--tps-accent-soft);
+    }
+    .tps-import-modern #tps-file-name {
+        margin-top: 10px;
+        color: var(--tps-text);
+        font-weight: 600;
+    }
+    .tps-import-modern #tps-file-error {
+        margin-top: 8px;
+        color: #a61b1b;
+    }
+    .tps-import-modern .button-primary {
+        border-radius: 8px;
+        transition: all .16s ease;
+    }
+    .tps-import-modern .button-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 16px rgba(26, 36, 51, .10); }
+    .tps-import-modern .button-primary:focus-visible { outline: 2px solid #0f5ea8; outline-offset: 2px; }
+    @media (max-width: 900px) {
+        .tps-import-modern .tps-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 
-    <?php if ($error) : ?>
-        <div class="notice notice-error is-dismissible">
-            <p>
-                <?php
-                if ($error === 'no_file') {
-                    echo esc_html('No file uploaded.');
-                } elseif ($error === 'invalid_file_type') {
-                    echo esc_html('Invalid file type. Please upload a .csv file.');
-                } elseif ($error === 'unable_to_open') {
-                    echo esc_html('Unable to open the file.');
-                } elseif ($error === 'empty_file') {
-                    echo esc_html('The uploaded file is empty.');
-                } elseif ($error === 'invalid_header') {
-                    echo esc_html('Invalid CSV header. Please check the first row.');
-                } elseif ($error === 'missing_column' && $col) {
-                    echo esc_html('Missing required column: ' . $col);
-                } else {
-                    echo esc_html('Import failed. Please try again.');
-                }
-                ?>
-            </p>
-        </div>
-    <?php endif; ?>
-
-    <div class="notice notice-info">
-        <p><strong>CSV format requirements:</strong></p>
-        <ul>
-            <li>File must be <code>.csv</code></li>
-            <li>First row must contain column headers</li>
-            <li>Required columns:</li>
-        </ul>
-        <p><code>type, name, nuit, email, phone, address, city</code></p>
-        <p>
-            Allowed values for <code>type</code>:
-            <strong>individual</strong>, <strong>company</strong>
-        </p>
-    </div>
-
-    <div class="card">
-        <p>
-            Upload a <strong>CSV file</strong> to import customers.
-        </p>
-
-        <form method="post"
-              enctype="multipart/form-data"
-              action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-            <input type="hidden" name="action" value="tps_import_customers">
-            <?php wp_nonce_field('tps_import_customers'); ?>
-
-            <div id="tps-drop-zone" class="upload-drag-drop">
-                <strong>Click to select a CSV file</strong><br>
-                <span class="description">
-                    or drag and drop it here
-                </span>
-
-                <input type="file"
-                       id="tps_csv_file"
-                       name="file"
-                       accept=".csv"
-                       required
-                       class="hidden">
+<div class="wrap tps-import-modern">
+    <section class="tps-header">
+        <div class="tps-header-row">
+            <a class="tps-back-btn" href="<?php echo esc_url($back_url); ?>">
+                <span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>
+                <span>Voltar</span>
+            </a>
+            <div class="tps-header-content">
+                <h1>Importar Clientes</h1>
+                <p class="tps-subtitle">Importe em massa a sua base de clientes usando um ficheiro CSV.</p>
             </div>
+        </div>
+    </section>
 
-            <p id="tps-file-name" class="description"></p>
+    <section class="tps-grid">
+        <article class="tps-card">
+            <h2 class="tps-title-sm">Carregar Ficheiro</h2>
+            <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <input type="hidden" name="action" value="tps_import_customers">
+                <?php wp_nonce_field('tps_import_customers'); ?>
 
-            <p id="tps-file-error" class="description" hidden></p>
-            <?php submit_button('Import Customers', 'primary large', 'submit', false, array( 'id' => 'tps-import-submit', 'disabled' => 'disabled' )); ?>
+                <div id="tps-drop-zone">
+                    <strong>Clique para selecionar um ficheiro CSV</strong><br>
+                    <span class="description">ou arraste e largue aqui</span>
+                    <input type="file" id="tps_csv_file" name="file" accept=".csv" required class="hidden">
+                </div>
 
-        </form>
-    </div>
+                <p id="tps-file-name" class="description"></p>
+                <p id="tps-file-error" class="description" hidden></p>
 
+                <p style="margin-top: 10px;">
+                    <?php submit_button('Importar Clientes', 'primary', 'submit', false, array( 'id' => 'tps-import-submit', 'disabled' => 'disabled' )); ?>
+                </p>
+            </form>
+        </article>
+
+        <article class="tps-card">
+            <h2 class="tps-title-sm">Requisitos do CSV</h2>
+            <ul class="tps-list">
+                <li>A extensão do ficheiro deve ser <code>.csv</code>.</li>
+                <li>A primeira linha deve conter as colunas de cabeçalho.</li>
+                <li>Colunas obrigatórias: <code>type, name, nuit, email, phone, address, city</code>.</li>
+                <li>Valores permitidos para <code>type</code>: <strong>individual</strong> ou <strong>company</strong>.</li>
+            </ul>
+        </article>
+    </section>
 </div>
 
-<!-- Drag & Drop do CSV -->
 <script>
 (function () {
     const dropZone = document.getElementById('tps-drop-zone');
@@ -125,12 +213,12 @@ $col   = isset($_GET['col']) ? sanitize_text_field($_GET['col']) : '';
         hideError();
 
         if (!validateFile(file)) {
-            showError('Invalid file type. Please upload a .csv file.');
+            showError('Tipo de ficheiro inválido. Envie um ficheiro .csv.');
             resetFile();
             return;
         }
 
-        fileName.textContent = 'Selected file: ' + file.name;
+        fileName.textContent = 'Ficheiro selecionado: ' + file.name;
         if (submitBtn) submitBtn.disabled = false;
     }
 
@@ -140,20 +228,21 @@ $col   = isset($_GET['col']) ? sanitize_text_field($_GET['col']) : '';
 
     dropZone.addEventListener('dragover', function (e) {
         e.preventDefault();
+        dropZone.classList.add('is-dragging');
     });
 
     dropZone.addEventListener('dragleave', function () {
+        dropZone.classList.remove('is-dragging');
     });
 
     dropZone.addEventListener('drop', function (e) {
         e.preventDefault();
-
+        dropZone.classList.remove('is-dragging');
 
         if (!e.dataTransfer.files.length) return;
 
         const file = e.dataTransfer.files[0];
         fileInput.files = e.dataTransfer.files;
-
         handleFile(file);
     });
 
@@ -162,7 +251,6 @@ $col   = isset($_GET['col']) ? sanitize_text_field($_GET['col']) : '';
             resetFile();
             return;
         }
-
         handleFile(fileInput.files[0]);
     });
 })();
