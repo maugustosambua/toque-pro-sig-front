@@ -12,6 +12,8 @@ class TPS_Loader {
 
     // Método principal
     public static function init() {
+        // Usado no bootstrap do plugin para carregar classes e helpers
+        // antes de qualquer modulo registrar hooks no WordPress.
 
         // Interface do admin
         require_once TPS_PLUGIN_PATH . 'admin/class-admin-menus.php';
@@ -49,6 +51,8 @@ class TPS_Loader {
 
     // Inicializa controladores
     private static function init_controllers() {
+        // Usado na inicializacao global para ligar os modulos do sistema
+        // de clientes, documentos, produtos, configuracoes e login.
         TPS_Customers_Controller::init();
         TPS_Customers_Import_Export::init();
         TPS_Documents_Controller::init();
@@ -60,6 +64,7 @@ class TPS_Loader {
 
     // Inicializa menus e interface do admin
     private static function init_admin() {
+        // Usado apenas no wp-admin, evitando carregar menus no frontend.
         if ( is_admin() ) {
             TPS_Admin_Menus::init();
         }

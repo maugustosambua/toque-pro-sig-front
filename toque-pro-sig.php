@@ -1,36 +1,37 @@
 <?php
 /**
  * Plugin Name: Toque Pro SiG
- * Description: Sistema de Gestão e Faturação
+ * Description: Sistema de Gestao e Faturacao
  * Author: Toque Pro Lda.
  * Version: 1.0.0
  */
 
-// Bloqueia acesso directo
+// Bloqueia acesso directo.
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Define caminho base do plugin
+// Define caminhos/URLs base do plugin.
+define( 'TPS_PLUGIN_FILE', __FILE__ );
 define( 'TPS_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
+define( 'TPS_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
-// Hook de activação do plugin
+// Hook de activacao do plugin.
 require_once TPS_PLUGIN_PATH . 'core/class-activator.php';
 register_activation_hook(
     __FILE__,
     array( 'TPS_Activator', 'activate' )
 );
 
-// Hook de desactivacao do plugin
+// Hook de desactivacao do plugin.
 require_once TPS_PLUGIN_PATH . 'core/class-deactivator.php';
 register_deactivation_hook(
     __FILE__,
     array( 'TPS_Deactivator', 'deactivate' )
 );
 
-// Carregador
+// Carregador.
 require_once TPS_PLUGIN_PATH . 'core/class-loader.php';
 
-// Inicializa o sistema
+// Inicializa o sistema.
 add_action( 'plugins_loaded', array( 'TPS_Loader', 'init' ) );
-

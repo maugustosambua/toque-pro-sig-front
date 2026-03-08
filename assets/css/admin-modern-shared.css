@@ -1,3 +1,5 @@
+/* Usado nas telas de Clientes, Documentos e Produtos/Servicos.
+   Centraliza variaveis, paineis e padroes visuais compartilhados. */
 .tps-customers-modern,
 .tps-documents-modern,
 .tps-products-modern {
@@ -110,6 +112,7 @@
 .tps-customers-modern .tps-stats,
 .tps-documents-modern .tps-stats,
 .tps-products-modern .tps-stats {
+    /* Usado nos blocos de estatisticas do topo das listagens modernas. */
     display: grid;
     gap: 10px;
     margin-bottom: 16px;
@@ -178,6 +181,7 @@
 .tps-customers-modern .tps-toolbar,
 .tps-documents-modern .tps-toolbar,
 .tps-products-modern .tps-toolbar {
+    /* Usado nas barras de pesquisa e filtros das telas listadas acima. */
     display: grid;
     gap: 10px;
     margin-bottom: 12px;
@@ -241,6 +245,7 @@
 .tps-customers-modern .tps-table-shell,
 .tps-documents-modern .tps-table-shell,
 .tps-products-modern .tps-table-shell {
+    /* Usado no invólucro das tabelas principais para unificar borda e overflow. */
     background: var(--tps-panel);
     border: 1px solid var(--tps-border);
     border-radius: 12px;
@@ -308,6 +313,7 @@
 .tps-customers-modern .tps-row-btn,
 .tps-documents-modern .tps-row-btn,
 .tps-products-modern .tps-row-btn {
+    /* Usado nos links de acao de cada linha das tabelas do admin. */
     border: 1px solid var(--tps-border);
     background: #fff;
     color: var(--tps-text);
@@ -360,6 +366,7 @@
 .tps-customers-modern .tps-pagination,
 .tps-documents-modern .tps-pagination,
 .tps-products-modern .tps-pagination {
+    /* Usado no rodape das listagens para navegar entre paginas. */
     display: flex;
     justify-content: space-between;
     align-items: center;

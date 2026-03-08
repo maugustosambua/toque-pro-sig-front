@@ -679,6 +679,7 @@ class TPS_Documents_Controller {
         require_once $autoload;
 
         $mpdf = new \Mpdf\Mpdf();
+        $pdf_css_path = tps_get_asset_path( 'assets/css/document-pdf.css' );
 
         // HTML do PDF
         $html = '<h2>' . esc_html( $company ) . '</h2>';
@@ -723,19 +724,11 @@ class TPS_Documents_Controller {
 
         // Marca de cancelado
         if ( $document->status === 'cancelled' ) {
-            $html .= '
-                <div style="
-                    margin: 10px 0;
-                    padding: 10px;
-                    border: 2px solid #a61b1b;
-                    color: #a61b1b;
-                    font-weight: bold;
-                    text-align: center;
-                    font-size: 16px;
-                ">
-                    CANCELADO
-                </div>
-            ';
+            $html .= '<div class="tps-pdf-status-cancelled">CANCELADO</div>';
+        }
+
+        if ( file_exists( $pdf_css_path ) ) {
+            $mpdf->WriteHTML( file_get_contents( $pdf_css_path ), \Mpdf\HTMLParserMode::HEADER_CSS );
         }
 
         $mpdf->WriteHTML( $html );
