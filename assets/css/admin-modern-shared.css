@@ -2,7 +2,9 @@
    Centraliza variaveis, paineis e padroes visuais compartilhados. */
 .tps-customers-modern,
 .tps-documents-modern,
-.tps-products-modern {
+.tps-products-modern,
+.tps-inventory-modern,
+.tps-inventory-movements-modern {
     --tps-panel: #fff;
     --tps-border: #dde5ef;
     --tps-text: #1a2433;
@@ -13,7 +15,9 @@
 
 .tps-customers-modern .tps-icon,
 .tps-documents-modern .tps-icon,
-.tps-products-modern .tps-icon {
+.tps-products-modern .tps-icon,
+.tps-inventory-modern .tps-icon,
+.tps-inventory-movements-modern .tps-icon {
     display: inline-flex;
     align-items: center;
     vertical-align: middle;
@@ -22,7 +26,9 @@
 
 .tps-customers-modern .tps-header,
 .tps-documents-modern .tps-header,
-.tps-products-modern .tps-header {
+.tps-products-modern .tps-header,
+.tps-inventory-modern .tps-header,
+.tps-inventory-movements-modern .tps-header {
     background: linear-gradient(115deg, #f8fbff 0%, #edf4fc 55%, #e4edf8 100%);
     border: 1px solid var(--tps-border);
     border-radius: 14px;
@@ -31,7 +37,9 @@
 }
 
 .tps-documents-modern .tps-header,
-.tps-products-modern .tps-header {
+.tps-products-modern .tps-header,
+.tps-inventory-modern .tps-header,
+.tps-inventory-movements-modern .tps-header {
     display: flex;
     justify-content: space-between;
     gap: 12px;
@@ -47,9 +55,74 @@
     flex-wrap: wrap;
 }
 
+.tps-documents-modern .tps-header-row,
+.tps-products-modern .tps-header-row,
+.tps-inventory-modern .tps-header-row,
+.tps-inventory-movements-modern .tps-header-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.tps-documents-modern .tps-header-content,
+.tps-products-modern .tps-header-content,
+.tps-inventory-modern .tps-header-content,
+.tps-inventory-movements-modern .tps-header-content {
+    min-width: 0;
+}
+
+.tps-documents-modern .tps-back-btn,
+.tps-products-modern .tps-back-btn,
+.tps-inventory-modern .tps-back-btn,
+.tps-inventory-movements-modern .tps-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--tps-border);
+    border-radius: 999px;
+    padding: 9px 14px;
+    background: #fff;
+    color: var(--tps-text);
+    text-decoration: none;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background-color .16s ease;
+}
+
+.tps-documents-modern .tps-back-btn:hover,
+.tps-products-modern .tps-back-btn:hover,
+.tps-inventory-modern .tps-back-btn:hover,
+.tps-inventory-movements-modern .tps-back-btn:hover {
+    border-color: #b8cbe3;
+    background: #f6faff;
+    color: #123f67;
+    transform: translateY(-1px);
+}
+
+.tps-documents-modern .tps-back-btn:focus-visible,
+.tps-products-modern .tps-back-btn:focus-visible,
+.tps-inventory-modern .tps-back-btn:focus-visible,
+.tps-inventory-movements-modern .tps-back-btn:focus-visible {
+    outline: 2px solid #0f5ea8;
+    outline-offset: 2px;
+}
+
+.tps-documents-modern .tps-back-btn .dashicons,
+.tps-products-modern .tps-back-btn .dashicons,
+.tps-inventory-modern .tps-back-btn .dashicons,
+.tps-inventory-movements-modern .tps-back-btn .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
 .tps-customers-modern h1,
 .tps-documents-modern h1,
-.tps-products-modern h1 {
+.tps-products-modern h1,
+.tps-inventory-modern h1,
+.tps-inventory-movements-modern h1 {
     margin: 0;
     color: var(--tps-text);
     font-size: 24px;
@@ -57,14 +130,18 @@
 
 .tps-customers-modern .tps-subtitle,
 .tps-documents-modern .tps-subtitle,
-.tps-products-modern .tps-subtitle {
+.tps-products-modern .tps-subtitle,
+.tps-inventory-modern .tps-subtitle,
+.tps-inventory-movements-modern .tps-subtitle {
     margin: 6px 0 0;
     color: var(--tps-text-muted);
 }
 
 .tps-customers-modern .tps-actions,
 .tps-documents-modern .tps-actions,
-.tps-products-modern .tps-actions {
+.tps-products-modern .tps-actions,
+.tps-inventory-modern .tps-actions,
+.tps-inventory-movements-modern .tps-actions {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
@@ -72,7 +149,9 @@
 
 .tps-customers-modern .tps-btn,
 .tps-documents-modern .tps-btn,
-.tps-products-modern .tps-btn {
+.tps-products-modern .tps-btn,
+.tps-inventory-modern .tps-btn,
+.tps-inventory-movements-modern .tps-btn {
     border-radius: 8px;
     padding: 8px 12px;
     font-weight: 600;
@@ -83,13 +162,17 @@
 
 .tps-customers-modern .tps-btn-primary,
 .tps-documents-modern .tps-btn,
-.tps-products-modern .tps-btn {
+.tps-products-modern .tps-btn,
+.tps-inventory-modern .tps-btn,
+.tps-inventory-movements-modern .tps-btn {
     background: var(--tps-accent);
     color: #fff;
 }
 
 .tps-customers-modern .tps-btn-secondary,
-.tps-documents-modern .tps-btn-secondary {
+.tps-documents-modern .tps-btn-secondary,
+.tps-inventory-modern .tps-btn-secondary,
+.tps-inventory-movements-modern .tps-btn-secondary {
     background: #fff;
     color: var(--tps-text);
     border-color: var(--tps-border);
@@ -97,21 +180,27 @@
 
 .tps-customers-modern .tps-btn:hover,
 .tps-documents-modern .tps-btn:hover,
-.tps-products-modern .tps-btn:hover {
+.tps-products-modern .tps-btn:hover,
+.tps-inventory-modern .tps-btn:hover,
+.tps-inventory-movements-modern .tps-btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 8px 16px rgba(26, 36, 51, .10);
 }
 
 .tps-customers-modern .tps-btn:focus-visible,
 .tps-documents-modern .tps-btn:focus-visible,
-.tps-products-modern .tps-btn:focus-visible {
+.tps-products-modern .tps-btn:focus-visible,
+.tps-inventory-modern .tps-btn:focus-visible,
+.tps-inventory-movements-modern .tps-btn:focus-visible {
     outline: 2px solid #0f5ea8;
     outline-offset: 2px;
 }
 
 .tps-customers-modern .tps-stats,
 .tps-documents-modern .tps-stats,
-.tps-products-modern .tps-stats {
+.tps-products-modern .tps-stats,
+.tps-inventory-modern .tps-stats,
+.tps-inventory-movements-modern .tps-stats {
     /* Usado nos blocos de estatisticas do topo das listagens modernas. */
     display: grid;
     gap: 10px;
@@ -120,7 +209,9 @@
 
 .tps-customers-modern .tps-stat,
 .tps-documents-modern .tps-stat,
-.tps-products-modern .tps-stat {
+.tps-products-modern .tps-stat,
+.tps-inventory-modern .tps-stat,
+.tps-inventory-movements-modern .tps-stat {
     background: var(--tps-panel);
     border: 1px solid var(--tps-border);
     border-radius: 12px;
@@ -130,7 +221,9 @@
 
 .tps-customers-modern .tps-stat:hover,
 .tps-documents-modern .tps-stat:hover,
-.tps-products-modern .tps-stat:hover {
+.tps-products-modern .tps-stat:hover,
+.tps-inventory-modern .tps-stat:hover,
+.tps-inventory-movements-modern .tps-stat:hover {
     border-color: #c7d5e7;
     box-shadow: 0 8px 16px rgba(26, 36, 51, .07);
     transform: translateY(-1px);
@@ -138,7 +231,9 @@
 
 .tps-customers-modern .tps-stat-head,
 .tps-documents-modern .tps-stat-head,
-.tps-products-modern .tps-stat-head {
+.tps-products-modern .tps-stat-head,
+.tps-inventory-modern .tps-stat-head,
+.tps-inventory-movements-modern .tps-stat-head {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -147,7 +242,9 @@
 
 .tps-customers-modern .tps-stat-icon,
 .tps-documents-modern .tps-stat-icon,
-.tps-products-modern .tps-stat-icon {
+.tps-products-modern .tps-stat-icon,
+.tps-inventory-modern .tps-stat-icon,
+.tps-inventory-movements-modern .tps-stat-icon {
     color: #5e6f86;
     font-size: 16px;
     width: 16px;
@@ -156,7 +253,9 @@
 
 .tps-customers-modern .tps-stat-label,
 .tps-documents-modern .tps-stat-label,
-.tps-products-modern .tps-stat-label {
+.tps-products-modern .tps-stat-label,
+.tps-inventory-modern .tps-stat-label,
+.tps-inventory-movements-modern .tps-stat-label {
     color: var(--tps-text-muted);
     font-size: 12px;
     text-transform: uppercase;
@@ -165,13 +264,17 @@
 
 .tps-customers-modern .tps-stat-head .tps-stat-label,
 .tps-documents-modern .tps-stat-head .tps-stat-label,
-.tps-products-modern .tps-stat-head .tps-stat-label {
+.tps-products-modern .tps-stat-head .tps-stat-label,
+.tps-inventory-modern .tps-stat-head .tps-stat-label,
+.tps-inventory-movements-modern .tps-stat-head .tps-stat-label {
     margin: 0;
 }
 
 .tps-customers-modern .tps-stat-value,
 .tps-documents-modern .tps-stat-value,
-.tps-products-modern .tps-stat-value {
+.tps-products-modern .tps-stat-value,
+.tps-inventory-modern .tps-stat-value,
+.tps-inventory-movements-modern .tps-stat-value {
     margin: 0;
     color: var(--tps-text);
     font-size: 24px;
@@ -180,7 +283,9 @@
 
 .tps-customers-modern .tps-toolbar,
 .tps-documents-modern .tps-toolbar,
-.tps-products-modern .tps-toolbar {
+.tps-products-modern .tps-toolbar,
+.tps-inventory-modern .tps-toolbar,
+.tps-inventory-movements-modern .tps-toolbar {
     /* Usado nas barras de pesquisa e filtros das telas listadas acima. */
     display: grid;
     gap: 10px;
@@ -192,7 +297,11 @@
 .tps-documents-modern .tps-search,
 .tps-documents-modern .tps-select,
 .tps-products-modern .tps-search,
-.tps-products-modern .tps-select {
+.tps-products-modern .tps-select,
+.tps-inventory-modern .tps-search,
+.tps-inventory-modern .tps-select,
+.tps-inventory-movements-modern .tps-search,
+.tps-inventory-movements-modern .tps-select {
     min-height: 40px;
     border: 1px solid var(--tps-border);
     border-radius: 8px;
@@ -244,7 +353,9 @@
 
 .tps-customers-modern .tps-table-shell,
 .tps-documents-modern .tps-table-shell,
-.tps-products-modern .tps-table-shell {
+.tps-products-modern .tps-table-shell,
+.tps-inventory-modern .tps-table-shell,
+.tps-inventory-movements-modern .tps-table-shell {
     /* Usado no invólucro das tabelas principais para unificar borda e overflow. */
     background: var(--tps-panel);
     border: 1px solid var(--tps-border);
@@ -254,7 +365,9 @@
 
 .tps-customers-modern table,
 .tps-documents-modern table,
-.tps-products-modern table {
+.tps-products-modern table,
+.tps-inventory-modern table,
+.tps-inventory-movements-modern table {
     width: 100%;
     border-collapse: collapse;
 }
@@ -264,7 +377,11 @@
 .tps-documents-modern th,
 .tps-documents-modern td,
 .tps-products-modern th,
-.tps-products-modern td {
+.tps-products-modern td,
+.tps-inventory-modern th,
+.tps-inventory-modern td,
+.tps-inventory-movements-modern th,
+.tps-inventory-movements-modern td {
     padding: 10px 12px;
     border-bottom: 1px solid #edf1f6;
     text-align: left;
@@ -272,7 +389,9 @@
 
 .tps-customers-modern th,
 .tps-documents-modern th,
-.tps-products-modern th {
+.tps-products-modern th,
+.tps-inventory-modern th,
+.tps-inventory-movements-modern th {
     background: #f8fbff;
     font-size: 12px;
     text-transform: uppercase;
@@ -281,19 +400,25 @@
 
 .tps-customers-modern tbody tr td,
 .tps-documents-modern tbody tr td,
-.tps-products-modern tbody tr td {
+.tps-products-modern tbody tr td,
+.tps-inventory-modern tbody tr td,
+.tps-inventory-movements-modern tbody tr td {
     transition: background-color .16s ease, box-shadow .16s ease;
 }
 
 .tps-customers-modern tbody tr:hover td,
 .tps-documents-modern tbody tr:hover td,
-.tps-products-modern tbody tr:hover td {
+.tps-products-modern tbody tr:hover td,
+.tps-inventory-modern tbody tr:hover td,
+.tps-inventory-movements-modern tbody tr:hover td {
     background: #eaf4ff;
 }
 
 .tps-customers-modern tbody tr:hover td:first-child,
 .tps-documents-modern tbody tr:hover td:first-child,
-.tps-products-modern tbody tr:hover td:first-child {
+.tps-products-modern tbody tr:hover td:first-child,
+.tps-inventory-modern tbody tr:hover td:first-child,
+.tps-inventory-movements-modern tbody tr:hover td:first-child {
     box-shadow: inset 3px 0 0 #0f5ea8;
 }
 
@@ -304,7 +429,9 @@
 
 .tps-customers-modern .tps-cell-with-icon,
 .tps-documents-modern .tps-cell-with-icon,
-.tps-products-modern .tps-cell-with-icon {
+.tps-products-modern .tps-cell-with-icon,
+.tps-inventory-modern .tps-cell-with-icon,
+.tps-inventory-movements-modern .tps-cell-with-icon {
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -312,7 +439,9 @@
 
 .tps-customers-modern .tps-row-btn,
 .tps-documents-modern .tps-row-btn,
-.tps-products-modern .tps-row-btn {
+.tps-products-modern .tps-row-btn,
+.tps-inventory-modern .tps-row-btn,
+.tps-inventory-movements-modern .tps-row-btn {
     /* Usado nos links de acao de cada linha das tabelas do admin. */
     border: 1px solid var(--tps-border);
     background: #fff;
@@ -334,7 +463,9 @@
 
 .tps-customers-modern .tps-row-btn:hover,
 .tps-documents-modern .tps-row-btn:hover,
-.tps-products-modern .tps-row-btn:hover {
+.tps-products-modern .tps-row-btn:hover,
+.tps-inventory-modern .tps-row-btn:hover,
+.tps-inventory-movements-modern .tps-row-btn:hover {
     border-color: #bacde5;
     background: #f7fbff;
     color: #123f67;
@@ -342,14 +473,18 @@
 
 .tps-customers-modern .tps-row-btn:focus-visible,
 .tps-documents-modern .tps-row-btn:focus-visible,
-.tps-products-modern .tps-row-btn:focus-visible {
+.tps-products-modern .tps-row-btn:focus-visible,
+.tps-inventory-modern .tps-row-btn:focus-visible,
+.tps-inventory-movements-modern .tps-row-btn:focus-visible {
     outline: 2px solid #0f5ea8;
     outline-offset: 2px;
 }
 
 .tps-customers-modern .tps-row-btn-danger,
 .tps-documents-modern .tps-row-btn-danger,
-.tps-products-modern .tps-row-btn-danger {
+.tps-products-modern .tps-row-btn-danger,
+.tps-inventory-modern .tps-row-btn-danger,
+.tps-inventory-movements-modern .tps-row-btn-danger {
     border-color: #e5b4ba;
     background: #fff2f4;
     color: #ad2433;
@@ -357,7 +492,9 @@
 
 .tps-customers-modern .tps-row-btn-danger:hover,
 .tps-documents-modern .tps-row-btn-danger:hover,
-.tps-products-modern .tps-row-btn-danger:hover {
+.tps-products-modern .tps-row-btn-danger:hover,
+.tps-inventory-modern .tps-row-btn-danger:hover,
+.tps-inventory-movements-modern .tps-row-btn-danger:hover {
     border-color: #d8939b;
     background: #fee8eb;
     color: #8f1d2a;
@@ -365,7 +502,9 @@
 
 .tps-customers-modern .tps-pagination,
 .tps-documents-modern .tps-pagination,
-.tps-products-modern .tps-pagination {
+.tps-products-modern .tps-pagination,
+.tps-inventory-modern .tps-pagination,
+.tps-inventory-movements-modern .tps-pagination {
     /* Usado no rodape das listagens para navegar entre paginas. */
     display: flex;
     justify-content: space-between;
@@ -375,7 +514,9 @@
 
 .tps-customers-modern .tps-page-btn,
 .tps-documents-modern .tps-page-btn,
-.tps-products-modern .tps-page-btn {
+.tps-products-modern .tps-page-btn,
+.tps-inventory-modern .tps-page-btn,
+.tps-inventory-movements-modern .tps-page-btn {
     border: 1px solid var(--tps-border);
     background: #fff;
     border-radius: 6px;
@@ -386,28 +527,36 @@
 
 .tps-customers-modern .tps-page-btn:hover:not(:disabled),
 .tps-documents-modern .tps-page-btn:hover:not(:disabled),
-.tps-products-modern .tps-page-btn:hover:not(:disabled) {
+.tps-products-modern .tps-page-btn:hover:not(:disabled),
+.tps-inventory-modern .tps-page-btn:hover:not(:disabled),
+.tps-inventory-movements-modern .tps-page-btn:hover:not(:disabled) {
     border-color: #b8cbe3;
     background: #f6faff;
 }
 
 .tps-customers-modern .tps-page-btn:focus-visible,
 .tps-documents-modern .tps-page-btn:focus-visible,
-.tps-products-modern .tps-page-btn:focus-visible {
+.tps-products-modern .tps-page-btn:focus-visible,
+.tps-inventory-modern .tps-page-btn:focus-visible,
+.tps-inventory-movements-modern .tps-page-btn:focus-visible {
     outline: 2px solid #0f5ea8;
     outline-offset: 2px;
 }
 
 .tps-customers-modern .tps-page-btn:disabled,
 .tps-documents-modern .tps-page-btn:disabled,
-.tps-products-modern .tps-page-btn:disabled {
+.tps-products-modern .tps-page-btn:disabled,
+.tps-inventory-modern .tps-page-btn:disabled,
+.tps-inventory-movements-modern .tps-page-btn:disabled {
     opacity: .5;
     cursor: not-allowed;
 }
 
 .tps-customers-modern .tps-empty,
 .tps-documents-modern .tps-empty,
-.tps-products-modern .tps-empty {
+.tps-products-modern .tps-empty,
+.tps-inventory-modern .tps-empty,
+.tps-inventory-movements-modern .tps-empty {
     padding: 18px;
     color: var(--tps-text-muted);
 }

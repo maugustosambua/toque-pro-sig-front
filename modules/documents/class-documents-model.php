@@ -31,13 +31,14 @@ class TPS_Documents_Model {
         global $wpdb;
 
         $defaults = array(
-            'orderby'  => 'number',
-            'order'    => 'DESC',
-            'per_page' => 20,
-            'offset'   => 0,
-            'type'     => null,
-            'status'   => null,
-            'search'   => '',
+            'orderby'        => 'number',
+            'order'          => 'DESC',
+            'per_page'       => 20,
+            'offset'         => 0,
+            'type'           => null,
+            'status'         => null,
+            'payment_status' => null,
+            'search'         => '',
         );
 
         $args = wp_parse_args( $args, $defaults );
@@ -49,6 +50,10 @@ class TPS_Documents_Model {
 
         if ( $args['status'] ) {
             $where[] = $wpdb->prepare( 'd.status = %s', $args['status'] );
+        }
+
+        if ( $args['payment_status'] ) {
+            $where[] = $wpdb->prepare( 'd.payment_status = %s', $args['payment_status'] );
         }
 
         if ( ! empty( $args['search'] ) ) {
@@ -66,6 +71,9 @@ class TPS_Documents_Model {
             'number'        => 'd.number',
             'type'          => 'd.type',
             'issue_date'    => 'd.issue_date',
+            'due_date'      => 'd.due_date',
+            'payment_status'=> 'd.payment_status',
+            'balance_due'   => 'd.balance_due',
             'customer_name' => 'c.name',
             'customer_city' => 'c.city',
         );
@@ -104,6 +112,10 @@ class TPS_Documents_Model {
             $where[] = $wpdb->prepare( 'd.status = %s', $args['status'] );
         }
 
+        if ( ! empty( $args['payment_status'] ) ) {
+            $where[] = $wpdb->prepare( 'd.payment_status = %s', $args['payment_status'] );
+        }
+
         $join = '';
         if ( ! empty( $args['search'] ) ) {
             $like = '%' . $wpdb->esc_like( $args['search'] ) . '%';
@@ -138,6 +150,10 @@ class TPS_Documents_Model {
                 'customer_id' => $data['customer_id'],
                 'status'      => 'draft',
                 'issue_date'  => $data['issue_date'],
+                'due_date'    => $data['due_date'],
+                'payment_status' => 'pending',
+                'paid_total'  => 0,
+                'balance_due' => 0,
             ),
             array(
                 '%s',
@@ -145,6 +161,10 @@ class TPS_Documents_Model {
                 '%d',
                 '%s',
                 '%s',
+                '%s',
+                '%s',
+                '%f',
+                '%f',
             )
         );
     }
@@ -172,6 +192,17 @@ class TPS_Documents_Model {
         );
     }
 
+    // Estados financeiros suportados.
+    public static function payment_statuses() {
+        return array(
+            'pending'   => 'Pendente',
+            'partial'   => 'Parcial',
+            'paid'      => 'Pago',
+            'overdue'   => 'Vencido',
+            'cancelled' => 'Cancelado',
+        );
+    }
+
     // Retorna um documento
     public static function get( $id ) {
         global $wpdb;
@@ -192,7 +223,7 @@ class TPS_Documents_Model {
     public static function issue( $document_id ) {
         global $wpdb;
 
-        return $wpdb->update(
+        $updated = $wpdb->update(
             self::table(),
             array(
                 'status' => 'issued',
@@ -207,6 +238,10 @@ class TPS_Documents_Model {
                 '%d',
             )
         );
+
+        self::sync_payment_totals( $document_id );
+
+        return $updated;
     }
 
     // Actualiza número do documento
@@ -265,7 +300,7 @@ class TPS_Documents_Model {
     public static function cancel( $document_id ) {
         global $wpdb;
 
-        return $wpdb->update(
+        $updated = $wpdb->update(
             self::table(),
             array(
                 'status' => 'cancelled',
@@ -280,6 +315,81 @@ class TPS_Documents_Model {
                 '%d',
             )
         );
+
+        self::sync_payment_totals( $document_id );
+
+        return $updated;
+    }
+
+    // Recalcula totais pagos, saldo e estado financeiro.
+    public static function sync_payment_totals( $document_id ) {
+        global $wpdb;
+
+        $document_id = (int) $document_id;
+        if ( $document_id <= 0 ) {
+            return false;
+        }
+
+        $document = self::get( $document_id );
+        if ( ! $document ) {
+            return false;
+        }
+
+        $totals         = TPS_Document_Lines_Model::totals( $document_id );
+        $document_total = (float) $totals['total'];
+        $paid_total     = class_exists( 'TPS_Payments_Model' ) ? (float) TPS_Payments_Model::paid_total_by_document( $document_id ) : 0.0;
+        $balance_due    = 'issued' === $document->status ? max( 0, $document_total - $paid_total ) : 0.0;
+        $payment_status = self::resolve_payment_status( $document, $paid_total, $balance_due, $document_total );
+
+        return $wpdb->update(
+            self::table(),
+            array(
+                'payment_status' => $payment_status,
+                'paid_total'     => $paid_total,
+                'balance_due'    => $balance_due,
+            ),
+            array(
+                'id' => $document_id,
+            ),
+            array(
+                '%s',
+                '%f',
+                '%f',
+            ),
+            array(
+                '%d',
+            )
+        );
+    }
+
+    // Resolve o estado financeiro a partir do saldo e vencimento.
+    private static function resolve_payment_status( $document, $paid_total, $balance_due, $document_total ) {
+        if ( 'cancelled' === $document->status ) {
+            return 'cancelled';
+        }
+
+        if ( 'issued' !== $document->status ) {
+            return 'pending';
+        }
+
+        if ( $document_total <= 0 && $paid_total <= 0 ) {
+            return 'pending';
+        }
+
+        if ( $balance_due <= 0.009 ) {
+            return 'paid';
+        }
+
+        $today = wp_date( 'Y-m-d' );
+        if ( ! empty( $document->due_date ) && $document->due_date < $today ) {
+            return 'overdue';
+        }
+
+        if ( $paid_total > 0 ) {
+            return 'partial';
+        }
+
+        return 'pending';
     }
 
 

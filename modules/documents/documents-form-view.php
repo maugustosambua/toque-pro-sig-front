@@ -70,6 +70,10 @@ if (! $document_id) :
                     <label for="tps-issue-date">Data de Emissao</label>
                     <input id="tps-issue-date" type="date" name="issue_date" value="<?php echo esc_attr(date('Y-m-d')); ?>">
                 </div>
+                <div>
+                    <label for="tps-due-date">Data de Vencimento</label>
+                    <input id="tps-due-date" type="date" name="due_date" value="<?php echo esc_attr(date('Y-m-d')); ?>">
+                </div>
             </div>
 
             <p class="tps-mt-14">
@@ -88,6 +92,8 @@ $tax_amount = tps_calculate_iva($subtotal);
 $grand_total = TPS_Document_Lines_Model::document_total_with_tax($document_id);
 $type_labels = TPS_Documents_Model::types();
 $status_labels = TPS_Documents_Model::statuses();
+$payment_status_labels = TPS_Documents_Model::payment_statuses();
+$payment_history = class_exists('TPS_Payments_Model') ? TPS_Payments_Model::get_payment_history_by_document($document_id) : array();
 
 $status_class = 'tps-badge-draft';
 if (($document->status ?? '') === 'issued') {
@@ -122,6 +128,7 @@ if (($document->status ?? '') === 'cancelled') {
                     <li><span>NUIT do Cliente</span><strong><?php echo esc_html((string) $document->customer_nuit); ?></strong></li>
                 <?php endif; ?>
                 <li><span>Data de Emissao</span><strong><?php echo esc_html((string) $document->issue_date); ?></strong></li>
+                <li><span>Data de Vencimento</span><strong><?php echo esc_html((string) ($document->due_date ?: '-')); ?></strong></li>
                 <li>
                     <span>Estado</span>
                     <strong><span class="tps-badge <?php echo esc_attr($status_class); ?>"><?php echo esc_html((string) ($status_labels[$document->status] ?? $document->status)); ?></span></strong>
@@ -135,6 +142,9 @@ if (($document->status ?? '') === 'cancelled') {
                 <li><span>Subtotal</span><strong><?php echo esc_html(number_format($subtotal, 2)); ?></strong></li>
                 <li><span>IVA (<?php echo esc_html(number_format(tps_get_iva_rate() * 100, 2)); ?>%)</span><strong><?php echo esc_html(number_format($tax_amount, 2)); ?></strong></li>
                 <li><span>Total</span><strong><?php echo esc_html(number_format($grand_total, 2)); ?></strong></li>
+                <li><span>Recebido</span><strong><?php echo esc_html(number_format((float) $document->paid_total, 2)); ?></strong></li>
+                <li><span>Saldo Pendente</span><strong><?php echo esc_html(number_format((float) $document->balance_due, 2)); ?></strong></li>
+                <li><span>Estado Financeiro</span><strong><?php echo esc_html((string) ($payment_status_labels[$document->payment_status] ?? $document->payment_status)); ?></strong></li>
             </ul>
         </article>
     </section>
@@ -224,6 +234,83 @@ if (($document->status ?? '') === 'cancelled') {
             <p class="tps-muted"><em>Este documento nao e editavel no estado atual.</em></p>
         </section>
     <?php endif; ?>
+
+    <section class="tps-card">
+        <h2 class="tps-title-sm"><span class="dashicons dashicons-money-alt tps-icon" aria-hidden="true"></span>Recebimentos</h2>
+        <?php if ($document->status === 'issued' && (float) $document->balance_due > 0) : ?>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <?php wp_nonce_field('tps_register_payment'); ?>
+                <input type="hidden" name="action" value="tps_register_payment">
+                <input type="hidden" name="document_id" value="<?php echo esc_attr((string) $document_id); ?>">
+                <input type="hidden" name="redirect_to" value="<?php echo esc_url(admin_url('admin.php?page=tps-documents-add&document_id=' . (int) $document_id)); ?>">
+                <div class="tps-grid">
+                    <div>
+                        <label for="tps-payment-date">Data do Recebimento</label>
+                        <input id="tps-payment-date" type="date" name="payment_date" value="<?php echo esc_attr(date('Y-m-d')); ?>" required>
+                    </div>
+                    <div>
+                        <label for="tps-payment-amount">Valor</label>
+                        <input id="tps-payment-amount" type="number" step="0.01" min="0.01" max="<?php echo esc_attr(number_format((float) $document->balance_due, 2, '.', '')); ?>" name="amount" value="<?php echo esc_attr(number_format((float) $document->balance_due, 2, '.', '')); ?>" required>
+                    </div>
+                    <div>
+                        <label for="tps-payment-method">Metodo</label>
+                        <select id="tps-payment-method" name="method">
+                            <?php foreach (TPS_Payments_Model::methods() as $method_key => $method_label) : ?>
+                                <option value="<?php echo esc_attr($method_key); ?>"><?php echo esc_html($method_label); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="tps-payment-reference">Referencia</label>
+                        <input id="tps-payment-reference" type="text" name="reference">
+                    </div>
+                    <div>
+                        <label for="tps-payment-notes">Notas</label>
+                        <textarea id="tps-payment-notes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+
+                <p class="tps-mt-14">
+                    <?php submit_button('Registar Recebimento', 'primary', 'submit', false); ?>
+                </p>
+            </form>
+        <?php elseif ($document->status !== 'issued') : ?>
+            <p class="tps-muted">Os recebimentos ficam disponiveis apenas depois da emissao do documento.</p>
+        <?php else : ?>
+            <p class="tps-muted">Este documento ja esta totalmente pago.</p>
+        <?php endif; ?>
+
+        <div class="tps-table-shell">
+            <table class="widefat striped">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Metodo</th>
+                        <th>Referencia</th>
+                        <th>Valor</th>
+                        <th>Recibo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (! empty($payment_history)) : ?>
+                        <?php foreach ($payment_history as $payment) : ?>
+                            <tr>
+                                <td><?php echo esc_html((string) $payment->payment_date); ?></td>
+                                <td><?php echo esc_html((string) (TPS_Payments_Model::methods()[$payment->method] ?? $payment->method)); ?></td>
+                                <td><?php echo esc_html((string) ($payment->reference ?: '-')); ?></td>
+                                <td><?php echo esc_html(number_format((float) $payment->amount, 2)); ?></td>
+                                <td><a class="button button-small" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=tps_download_payment_receipt&payment_id=' . (int) $payment->id), 'tps_download_payment_receipt')); ?>">Recibo</a></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else : ?>
+                        <tr>
+                            <td colspan="5">Sem recebimentos registados.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
     <section class="tps-card">
         <h2 class="tps-title-sm"><span class="dashicons dashicons-admin-tools tps-icon" aria-hidden="true"></span>Acoes</h2>

@@ -17,11 +17,15 @@ class TPS_Loader {
 
         // Interface do admin
         require_once TPS_PLUGIN_PATH . 'admin/class-admin-menus.php';
+        require_once TPS_PLUGIN_PATH . 'database/class-schema.php';
 
         // Utilitários
         require_once TPS_PLUGIN_PATH . 'helpers/tax.php';
         require_once TPS_PLUGIN_PATH . 'helpers/numbering.php';
         require_once TPS_PLUGIN_PATH . 'helpers/ui.php';
+
+        // Garante que novas tabelas/colunas existam mesmo em installs ja activos.
+        TPS_Schema::install();
 
 
         // Módulo Clientes
@@ -34,9 +38,17 @@ class TPS_Loader {
         require_once TPS_PLUGIN_PATH . 'modules/documents/class-document-lines-model.php';
         require_once TPS_PLUGIN_PATH . 'modules/documents/class-documents-controller.php';
 
+        // MÃ³dulo Recebimentos
+        require_once TPS_PLUGIN_PATH . 'modules/payments/class-payments-model.php';
+        require_once TPS_PLUGIN_PATH . 'modules/payments/class-payments-controller.php';
+
         // Módulo Produtos e Serviços
         require_once TPS_PLUGIN_PATH . 'modules/products-services/class-products-services-model.php';
         require_once TPS_PLUGIN_PATH . 'modules/products-services/class-products-services-controller.php';
+
+        // Modulo Estoque
+        require_once TPS_PLUGIN_PATH . 'modules/inventory/class-inventory-model.php';
+        require_once TPS_PLUGIN_PATH . 'modules/inventory/class-inventory-controller.php';
 
         // Módulo Configurações
         require_once TPS_PLUGIN_PATH . 'modules/settings/class-settings-controller.php';
@@ -56,7 +68,9 @@ class TPS_Loader {
         TPS_Customers_Controller::init();
         TPS_Customers_Import_Export::init();
         TPS_Documents_Controller::init();
+        TPS_Payments_Controller::init();
         TPS_Products_Services_Controller::init();
+        TPS_Inventory_Controller::init();
         TPS_Settings_Controller::init();
         TPS_Dashboard_Controller::init();
         TPS_Login_Customizer::init();

@@ -318,6 +318,18 @@
             return 'dashicons-category';
         }
 
+        function stockBadge(row) {
+            if (!row.track_stock || row.type !== 'product') {
+                return '<span class="tps-muted">N/A</span>';
+            }
+
+            if (row.is_critical) {
+                return '<span class="tps-badge tps-badge-cancelled">Critico</span>';
+            }
+
+            return '<span class="tps-badge tps-badge-issued">OK</span>';
+        }
+
         // Usado para reconstruir a tabela de itens apos pesquisa ou troca de filtro.
         async function loadRows() {
             var params = new URLSearchParams({
@@ -348,6 +360,9 @@
                     + '<td>' + esc(r.sku) + '</td>'
                     + '<td>' + esc(r.unit) + '</td>'
                     + '<td>' + esc(r.price) + '</td>'
+                    + '<td>' + (r.track_stock && r.type === 'product' ? esc(r.stock_qty) : '<span class="tps-muted">N/A</span>') + '</td>'
+                    + '<td>' + (r.track_stock && r.type === 'product' ? esc(r.min_stock) : '<span class="tps-muted">N/A</span>') + '</td>'
+                    + '<td>' + (r.track_stock && r.type === 'product' ? esc(r.cost_price) + ' ' + stockBadge(r) : '<span class="tps-muted">N/A</span>') + '</td>'
                     + '<td class="tps-actions-col">'
                     + '<a class="tps-row-btn" href="' + esc(r.edit_url) + '"><span class="dashicons dashicons-edit" aria-hidden="true"></span>Editar</a>'
                     + '<a class="tps-row-btn tps-row-btn-danger" href="' + esc(r.delete_url) + '" onclick="return confirm(\'Eliminar este item?\');"><span class="dashicons dashicons-trash" aria-hidden="true"></span>Eliminar</a>'
@@ -401,6 +416,165 @@
         });
 
         loadRows();
+    }
+
+    function initInventoryForms() {
+        var typeSelect = document.getElementById('tps-ps-type');
+        var trackStock = document.getElementById('tps-ps-track-stock');
+        var stockFields = Array.from(document.querySelectorAll('.tps-stock-field'));
+        var inventoryType = document.getElementById('tps-inventory-type');
+        var quantityField = document.getElementById('tps-inventory-quantity');
+        var targetField = document.getElementById('tps-inventory-target');
+        var inventoryForm = document.querySelector('.tps-inventory-form');
+        var inventoryProductSearch = document.getElementById('tps-inventory-product-search');
+        var inventoryProductInput = document.getElementById('tps-inventory-product');
+        var inventoryProductResults = document.getElementById('tps-inventory-product-results');
+        var inventoryProductSelected = document.getElementById('tps-inventory-product-selected');
+        var inventoryAjaxUrl = data.inventoryModule ? (data.inventoryModule.ajaxUrl || '') : '';
+        var inventoryNonce = data.inventoryModule ? (data.inventoryModule.nonce || '') : '';
+        var inventoryTimer = null;
+
+        function syncProductStockFields() {
+            if (!typeSelect || !trackStock) {
+                return;
+            }
+
+            var isProduct = typeSelect.value === 'product';
+            if (!isProduct) {
+                trackStock.checked = false;
+            }
+            trackStock.disabled = !isProduct;
+
+            stockFields.forEach(function (field) {
+                field.hidden = !isProduct || !trackStock.checked;
+                field.querySelectorAll('input').forEach(function (input) {
+                    input.disabled = !isProduct || !trackStock.checked;
+                });
+            });
+        }
+
+        function syncInventoryMovementFields() {
+            if (!inventoryType || !quantityField || !targetField) {
+                return;
+            }
+
+            var isAdjustment = inventoryType.value === 'adjustment';
+            quantityField.disabled = isAdjustment;
+            targetField.disabled = !isAdjustment;
+        }
+
+        function clearInventoryResults() {
+            if (!inventoryProductResults) {
+                return;
+            }
+
+            inventoryProductResults.innerHTML = '';
+            inventoryProductResults.hidden = true;
+        }
+
+        function renderInventoryResults(items) {
+            if (!inventoryProductResults || !inventoryProductSelected || !inventoryProductInput || !inventoryProductSearch) {
+                return;
+            }
+
+            if (!items.length) {
+                inventoryProductResults.innerHTML = '<div class="tps-search-empty">Nenhum produto encontrado.</div>';
+                inventoryProductResults.hidden = false;
+                return;
+            }
+
+            inventoryProductResults.innerHTML = '';
+            items.forEach(function (item) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'tps-search-item';
+                btn.textContent = item.label;
+                btn.addEventListener('click', function () {
+                    inventoryProductInput.value = String(item.id);
+                    inventoryProductSearch.value = item.label;
+                    inventoryProductSelected.textContent = 'Produto selecionado: ' + item.label;
+                    clearInventoryResults();
+                });
+                inventoryProductResults.appendChild(btn);
+            });
+            inventoryProductResults.hidden = false;
+        }
+
+        async function fetchInventoryProducts(term) {
+            var params = new URLSearchParams({
+                action: 'tps_search_inventory_products',
+                nonce: inventoryNonce,
+                term: term
+            });
+
+            var response = await fetch(inventoryAjaxUrl + '?' + params.toString(), {
+                method: 'GET',
+                credentials: 'same-origin'
+            });
+
+            if (!response.ok) {
+                throw new Error('A pesquisa falhou');
+            }
+
+            return response.json();
+        }
+
+        if (typeSelect && trackStock) {
+            typeSelect.addEventListener('change', syncProductStockFields);
+            trackStock.addEventListener('change', syncProductStockFields);
+            syncProductStockFields();
+        }
+
+        if (inventoryType && quantityField && targetField) {
+            inventoryType.addEventListener('change', syncInventoryMovementFields);
+            syncInventoryMovementFields();
+        }
+
+        if (inventoryProductSearch && inventoryProductInput && inventoryProductResults && inventoryProductSelected && inventoryAjaxUrl && inventoryNonce) {
+            inventoryProductSearch.addEventListener('input', function () {
+                var term = inventoryProductSearch.value.trim();
+                inventoryProductInput.value = '';
+                inventoryProductSelected.textContent = '';
+
+                if (inventoryTimer) {
+                    clearTimeout(inventoryTimer);
+                }
+
+                if (term.length < 2) {
+                    clearInventoryResults();
+                    return;
+                }
+
+                inventoryTimer = setTimeout(async function () {
+                    try {
+                        var payload = await fetchInventoryProducts(term);
+                        if (!payload || !payload.success) {
+                            clearInventoryResults();
+                            return;
+                        }
+                        renderInventoryResults(payload.data || []);
+                    } catch (e) {
+                        clearInventoryResults();
+                    }
+                }, 250);
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!event.target.closest('#tps-inventory-product-search') && !event.target.closest('#tps-inventory-product-results')) {
+                    clearInventoryResults();
+                }
+            });
+
+            if (inventoryForm) {
+                inventoryForm.addEventListener('submit', function (event) {
+                    if (!inventoryProductInput.value) {
+                        event.preventDefault();
+                        inventoryProductSelected.textContent = 'Selecione um produto nos resultados da pesquisa.';
+                        inventoryProductSearch.focus();
+                    }
+                });
+            }
+        }
     }
 
     // Usado na pagina "Documentos" para manter filtros e acoes sincronizados.
@@ -858,6 +1032,7 @@
     initDocumentsList();
     initDocumentsFormCreate();
     initDocumentsFormEditCatalog();
+    initInventoryForms();
     initDashboardBars();
     initDashboardChart();
 })();

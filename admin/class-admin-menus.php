@@ -74,12 +74,24 @@ class TPS_Admin_Menus {
             );
         }
 
+        if ( 'tps-inventory' === $page || 'tps-stock-movements' === $page ) {
+            $data['inventoryModule'] = array(
+                'enabled' => true,
+                'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+                'nonce'   => wp_create_nonce( 'tps_search_inventory_products' ),
+            );
+        }
+
         if ( 'tps-documents' === $page ) {
             $data['documentsList'] = array(
                 'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
                 'nonce'         => wp_create_nonce( 'tps_ajax_documents_list' ),
                 'exportBaseUrl' => wp_nonce_url( admin_url( 'admin-post.php?action=tps_export_documents' ), 'tps_export_documents' ),
             );
+        }
+
+        if ( 'tps-payments' === $page || 'tps-accounts-receivable' === $page ) {
+            $data['paymentsModule'] = array( 'enabled' => true );
         }
 
         if ( 'tps-documents-add' === $page ) {
@@ -248,6 +260,64 @@ class TPS_Admin_Menus {
             array( __CLASS__, 'documents_add_page' )
         );
 
+        // Menu Stock.
+        add_menu_page(
+            'Stock',
+            'Stock',
+            'manage_options',
+            'tps-inventory',
+            array( __CLASS__, 'inventory_page' ),
+            'dashicons-archive',
+            28
+        );
+
+        add_submenu_page(
+            'tps-inventory',
+            'Stock',
+            'Stock',
+            'manage_options',
+            'tps-inventory',
+            array( __CLASS__, 'inventory_page' )
+        );
+
+        add_submenu_page(
+            'tps-inventory',
+            'Movimentos',
+            'Movimentos',
+            'manage_options',
+            'tps-stock-movements',
+            array( __CLASS__, 'inventory_movements_page' )
+        );
+
+        // Menu Recebimentos.
+        add_menu_page(
+            'Recebimentos',
+            'Recebimentos',
+            'manage_options',
+            'tps-payments',
+            array( __CLASS__, 'payments_page' ),
+            'dashicons-money-alt',
+            29
+        );
+
+        add_submenu_page(
+            'tps-payments',
+            'Recebimentos',
+            'Recebimentos',
+            'manage_options',
+            'tps-payments',
+            array( __CLASS__, 'payments_page' )
+        );
+
+        add_submenu_page(
+            'tps-payments',
+            'Contas a Receber',
+            'Contas a Receber',
+            'manage_options',
+            'tps-accounts-receivable',
+            array( __CLASS__, 'accounts_receivable_page' )
+        );
+
         // Menu Configuracoes.
         add_menu_page(
             'Configuracoes',
@@ -256,7 +326,7 @@ class TPS_Admin_Menus {
             'tps-settings',
             array( __CLASS__, 'settings_page' ),
             'dashicons-admin-generic',
-            29
+            30
         );
 
         // Pagina escondida para impressao.
@@ -308,6 +378,26 @@ class TPS_Admin_Menus {
     // Formulario de documento.
     public static function documents_add_page() {
         require TPS_PLUGIN_PATH . 'modules/documents/documents-form-view.php';
+    }
+
+    // Tela de Stock.
+    public static function inventory_page() {
+        require TPS_PLUGIN_PATH . 'modules/inventory/inventory-view.php';
+    }
+
+    // Tela de movimentos de Stock.
+    public static function inventory_movements_page() {
+        require TPS_PLUGIN_PATH . 'modules/inventory/inventory-movements-view.php';
+    }
+
+    // Lista de recebimentos.
+    public static function payments_page() {
+        require TPS_PLUGIN_PATH . 'modules/payments/payments-list-view.php';
+    }
+
+    // Lista de contas a receber.
+    public static function accounts_receivable_page() {
+        require TPS_PLUGIN_PATH . 'modules/payments/accounts-receivable-view.php';
     }
 
     // Pagina de configuracoes.

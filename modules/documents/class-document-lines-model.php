@@ -19,9 +19,14 @@ class TPS_Document_Lines_Model {
         // Procura linha existente
         $existing = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT * FROM " . self::table() . " 
-                WHERE document_id = %d AND description = %s",
+                "SELECT * FROM " . self::table() . "
+                WHERE document_id = %d AND (
+                    ( product_service_id IS NOT NULL AND product_service_id = %d )
+                    OR
+                    ( ( product_service_id IS NULL OR product_service_id = 0 ) AND description = %s )
+                )",
                 $data['document_id'],
+                isset( $data['product_service_id'] ) ? (int) $data['product_service_id'] : 0,
                 $data['description']
             )
         );
@@ -48,11 +53,13 @@ class TPS_Document_Lines_Model {
             self::table(),
             array(
                 'document_id' => $data['document_id'],
+                'product_service_id' => ! empty( $data['product_service_id'] ) ? (int) $data['product_service_id'] : null,
                 'description' => $data['description'],
                 'quantity'    => $data['quantity'],
                 'unit_price'  => $data['unit_price'],
             ),
             array(
+                '%d',
                 '%d',
                 '%s',
                 '%f',
@@ -68,7 +75,10 @@ class TPS_Document_Lines_Model {
 
         return $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM " . self::table() . " WHERE document_id = %d",
+                "SELECT l.*, p.name AS item_name, p.sku AS item_sku, p.track_stock
+                FROM " . self::table() . " l
+                LEFT JOIN " . TPS_Products_Services_Model::table() . " p ON p.id = l.product_service_id
+                WHERE l.document_id = %d",
                 $document_id
             )
         );

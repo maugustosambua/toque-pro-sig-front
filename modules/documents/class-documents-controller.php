@@ -300,7 +300,25 @@ class TPS_Documents_Controller {
             'number'      => TPS_Documents_Model::next_number_preview( $type ),
             'customer_id' => isset( $_POST['customer_id'] ) ? (int) $_POST['customer_id'] : 0,
             'issue_date'  => sanitize_text_field( $_POST['issue_date'] ),
+            'due_date'    => sanitize_text_field( $_POST['due_date'] ?? '' ),
         );
+
+        if ( '' === $data['due_date'] ) {
+            $data['due_date'] = $data['issue_date'];
+        }
+
+        if ( '' !== $data['issue_date'] && '' !== $data['due_date'] && $data['due_date'] < $data['issue_date'] ) {
+            wp_safe_redirect(
+                esc_url_raw(
+                    tps_notice_url(
+                        admin_url( 'admin.php?page=tps-documents-add' ),
+                        'document_invalid_due_date',
+                        'error'
+                    )
+                )
+            );
+            exit;
+        }
 
         $customer = TPS_Customers_Model::get( $data['customer_id'] );
         if ( ! $customer ) {
@@ -378,14 +396,16 @@ class TPS_Documents_Controller {
 
         // Dados
         $data = array(
-            'document_id' => (int) $_POST['document_id'],
-            'description' => $description,
-            'quantity'    => $quantity,
-            'unit_price'  => $unit_price,
+            'document_id'        => (int) $_POST['document_id'],
+            'product_service_id' => $product_service_id,
+            'description'        => $description,
+            'quantity'           => $quantity,
+            'unit_price'         => $unit_price,
         );
 
         // Insere linha
         TPS_Document_Lines_Model::insert( $data );
+        TPS_Documents_Model::sync_payment_totals( $data['document_id'] );
 
         // Redirecciona de volta
         wp_safe_redirect(
@@ -462,6 +482,7 @@ class TPS_Documents_Controller {
             array( 'id' => $line_id ),
             array( '%d' )
         );
+        TPS_Documents_Model::sync_payment_totals( $document_id );
 
         // Redirecciona
         wp_safe_redirect(
@@ -544,6 +565,31 @@ class TPS_Documents_Controller {
         }
 
         // Obtém número final
+        if ( class_exists( 'TPS_Inventory_Model' ) && ! TPS_Inventory_Model::document_has_stock_movements( $document_id, 'document' ) ) {
+            $inventory_result = TPS_Inventory_Model::apply_document_issue( $document_id );
+
+            if ( is_wp_error( $inventory_result ) ) {
+                $notice_code = 'inventory_issue_failed';
+                if ( 'insufficient_stock' === $inventory_result->get_error_code() ) {
+                    $notice_code = 'inventory_insufficient_stock';
+                }
+
+                wp_safe_redirect(
+                    esc_url_raw(
+                        tps_notice_url(
+                            admin_url( 'admin.php?page=tps-documents-add&document_id=' . $document_id ),
+                            $notice_code,
+                            'error',
+                            array(
+                                'tps_notice_message' => $inventory_result->get_error_message(),
+                            )
+                        )
+                    )
+                );
+                exit;
+            }
+        }
+
         $final_number = tps_get_and_increment_document_number( $document->type );
 
         // Actualiza número e emite
@@ -615,6 +661,26 @@ class TPS_Documents_Controller {
                 )
             );
             exit;
+        }
+
+        if ( class_exists( 'TPS_Inventory_Model' ) && TPS_Inventory_Model::document_has_stock_movements( $document_id, 'document' ) && ! TPS_Inventory_Model::document_has_stock_movements( $document_id, 'document_cancel' ) ) {
+            $inventory_result = TPS_Inventory_Model::reverse_document_issue( $document_id );
+
+            if ( is_wp_error( $inventory_result ) ) {
+                wp_safe_redirect(
+                    esc_url_raw(
+                        tps_notice_url(
+                            admin_url( 'admin.php?page=tps-documents-add&document_id=' . $document_id ),
+                            'inventory_issue_failed',
+                            'error',
+                            array(
+                                'tps_notice_message' => $inventory_result->get_error_message(),
+                            )
+                        )
+                    )
+                );
+                exit;
+            }
         }
 
         TPS_Documents_Model::cancel( $document_id );

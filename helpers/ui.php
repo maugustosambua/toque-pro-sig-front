@@ -89,6 +89,18 @@ function tps_get_notice_message( $notice_code ) {
             return 'Documento cancelado com sucesso.';
         case 'document_cancel_invalid_status':
             return 'So e possivel cancelar documentos emitidos.';
+        case 'document_invalid_due_date':
+            return 'A data de vencimento deve ser igual ou posterior a data de emissao.';
+        case 'payment_invalid_document':
+            return 'O recebimento so pode ser registado para documentos emitidos.';
+        case 'payment_invalid_amount':
+            return 'O valor do recebimento e invalido.';
+        case 'payment_recorded':
+            return 'Recebimento registado com sucesso.';
+        case 'payment_amount_exceeds_balance':
+            return 'O valor do recebimento nao pode exceder o saldo pendente.';
+        case 'payment_not_found':
+            return 'Recebimento nao encontrado.';
         case 'product_service_created':
             return 'Produto/Servico criado com sucesso.';
         case 'product_service_updated':
@@ -99,6 +111,14 @@ function tps_get_notice_message( $notice_code ) {
             return 'Preencha os campos obrigatorios do item.';
         case 'product_service_delete_invalid':
             return 'Nao foi possivel remover o item. ID invalido.';
+        case 'inventory_movement_saved':
+            return 'Movimento de stock registado com sucesso.';
+        case 'inventory_invalid_movement':
+            return 'Verifique os dados do movimento de stock.';
+        case 'inventory_insufficient_stock':
+            return 'Stock insuficiente para concluir a operacao.';
+        case 'inventory_issue_failed':
+            return 'Nao foi possivel actualizar o stock deste documento.';
         default:
             return '';
     }

@@ -55,6 +55,9 @@ class TPS_Dashboard_Controller {
                 'revenue_subtotal_prev'  => (float) $totals_prev['subtotal'],
                 'tax_month'              => (float) $totals_current['tax'],
                 'average_ticket_month'   => (float) $average_ticket,
+                'receivable_total'       => self::receivable_total(),
+                'overdue_total'          => self::overdue_total(),
+                'critical_products'      => class_exists( 'TPS_Products_Services_Model' ) ? (int) TPS_Products_Services_Model::count_critical_products() : 0,
             ),
             'charts'             => array(
                 'monthly_revenue'  => $monthly_revenue,
@@ -67,6 +70,7 @@ class TPS_Dashboard_Controller {
             ),
             'top_customers'      => self::top_customers_between( $last_90_days_start, $next_month_start, 6 ),
             'recent_documents'   => self::recent_documents( 8 ),
+            'critical_products'  => self::critical_products( 6 ),
             'last_90_days_start' => $last_90_days_start,
         );
     }
@@ -333,5 +337,75 @@ class TPS_Dashboard_Controller {
         }
 
         return $items;
+    }
+
+    // Total em aberto de documentos emitidos.
+    private static function receivable_total() {
+        global $wpdb;
+
+        $table = TPS_Documents_Model::table();
+        $sql   = $wpdb->prepare(
+            "SELECT COALESCE(SUM(balance_due), 0) FROM {$table} WHERE status = %s AND balance_due > 0",
+            'issued'
+        );
+
+        return (float) $wpdb->get_var( $sql );
+    }
+
+    // Total vencido com saldo pendente.
+    private static function overdue_total() {
+        global $wpdb;
+
+        $table = TPS_Documents_Model::table();
+        $today = wp_date( 'Y-m-d' );
+        $sql   = $wpdb->prepare(
+            "SELECT COALESCE(SUM(balance_due), 0)
+             FROM {$table}
+             WHERE status = %s
+               AND balance_due > 0
+               AND due_date IS NOT NULL
+               AND due_date < %s",
+            'issued',
+            $today
+        );
+
+        return (float) $wpdb->get_var( $sql );
+    }
+
+    // Produtos com stock abaixo do minimo.
+    private static function critical_products( $limit ) {
+        $limit = max( 1, (int) $limit );
+
+        if ( ! class_exists( 'TPS_Inventory_Model' ) ) {
+            return array();
+        }
+
+        $items = TPS_Inventory_Model::get_stock_items(
+            array(
+                'critical_only' => true,
+                'orderby'       => 'stock_qty',
+                'order'         => 'ASC',
+                'per_page'      => $limit,
+                'offset'        => 0,
+            )
+        );
+
+        if ( empty( $items ) ) {
+            return array();
+        }
+
+        $rows = array();
+        foreach ( $items as $item ) {
+            $rows[] = array(
+                'id'         => (int) $item->id,
+                'name'       => (string) $item->name,
+                'sku'        => (string) ( $item->sku ?? '' ),
+                'stock_qty'  => (float) $item->stock_qty,
+                'min_stock'  => (float) $item->min_stock,
+                'cost_price' => (float) $item->cost_price,
+            );
+        }
+
+        return $rows;
     }
 }

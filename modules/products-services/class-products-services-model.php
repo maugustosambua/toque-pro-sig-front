@@ -32,6 +32,16 @@ class TPS_Products_Services_Model {
             );
         }
 
+        if ( array_key_exists( 'track_stock', $args ) && '' !== $args['track_stock'] && null !== $args['track_stock'] ) {
+            $where[] = $wpdb->prepare( 'track_stock = %d', (int) $args['track_stock'] ? 1 : 0 );
+        }
+
+        if ( ! empty( $args['critical_only'] ) ) {
+            $where[] = 'type = "product"';
+            $where[] = 'track_stock = 1';
+            $where[] = 'stock_qty <= min_stock';
+        }
+
         if ( empty( $where ) ) {
             return '';
         }
@@ -41,7 +51,7 @@ class TPS_Products_Services_Model {
 
     // Monta ORDER BY seguro
     private static function build_order( $args ) {
-        $allowed = array( 'name', 'type', 'price', 'created_at' );
+        $allowed = array( 'name', 'type', 'price', 'created_at', 'stock_qty', 'min_stock', 'cost_price' );
 
         $orderby = ! empty( $args['orderby'] ) && in_array( $args['orderby'], $allowed, true )
             ? $args['orderby']
@@ -70,10 +80,14 @@ class TPS_Products_Services_Model {
                 'sku'         => $data['sku'],
                 'unit'        => $data['unit'],
                 'price'       => $data['price'],
+                'track_stock' => ! empty( $data['track_stock'] ) ? 1 : 0,
+                'min_stock'   => isset( $data['min_stock'] ) ? $data['min_stock'] : 0,
+                'stock_qty'   => isset( $data['stock_qty'] ) ? $data['stock_qty'] : 0,
+                'cost_price'  => isset( $data['cost_price'] ) ? $data['cost_price'] : 0,
                 'description' => $data['description'],
                 'created_at'  => current_time( 'mysql' ),
             ),
-            array( '%s', '%s', '%s', '%s', '%f', '%s', '%s' )
+            array( '%s', '%s', '%s', '%s', '%f', '%d', '%f', '%f', '%f', '%s', '%s' )
         );
     }
 
@@ -89,11 +103,15 @@ class TPS_Products_Services_Model {
                 'sku'         => $data['sku'],
                 'unit'        => $data['unit'],
                 'price'       => $data['price'],
+                'track_stock' => ! empty( $data['track_stock'] ) ? 1 : 0,
+                'min_stock'   => isset( $data['min_stock'] ) ? $data['min_stock'] : 0,
+                'stock_qty'   => isset( $data['stock_qty'] ) ? $data['stock_qty'] : 0,
+                'cost_price'  => isset( $data['cost_price'] ) ? $data['cost_price'] : 0,
                 'description' => $data['description'],
                 'updated_at'  => current_time( 'mysql' ),
             ),
             array( 'id' => (int) $id ),
-            array( '%s', '%s', '%s', '%s', '%f', '%s', '%s' ),
+            array( '%s', '%s', '%s', '%s', '%f', '%d', '%f', '%f', '%f', '%s', '%s' ),
             array( '%d' )
         );
     }
@@ -128,6 +146,8 @@ class TPS_Products_Services_Model {
         $defaults = array(
             'type'     => '',
             'search'   => '',
+            'track_stock' => null,
+            'critical_only' => false,
             'orderby'  => 'name',
             'order'    => 'ASC',
             'per_page' => 0,
@@ -157,6 +177,8 @@ class TPS_Products_Services_Model {
         $defaults = array(
             'type'   => '',
             'search' => '',
+            'track_stock' => null,
+            'critical_only' => false,
         );
 
         $args = wp_parse_args( $args, $defaults );
@@ -165,5 +187,14 @@ class TPS_Products_Services_Model {
         $sql .= self::build_where( $args );
 
         return (int) $wpdb->get_var( $sql );
+    }
+
+    // Conta produtos com stock critico.
+    public static function count_critical_products() {
+        return self::count_items(
+            array(
+                'critical_only' => true,
+            )
+        );
     }
 }

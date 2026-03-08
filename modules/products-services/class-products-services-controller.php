@@ -38,6 +38,8 @@ class TPS_Products_Services_Controller {
         $order   = 'ASC';
         if ( 'price' === $sort ) {
             $orderby = 'price';
+        } elseif ( 'stock' === $sort ) {
+            $orderby = 'stock_qty';
         } elseif ( 'date' === $sort ) {
             $orderby = 'created_at';
             $order   = 'DESC';
@@ -70,6 +72,11 @@ class TPS_Products_Services_Controller {
                 'sku'        => (string) ( $item->sku ?? '' ),
                 'unit'       => (string) ( $item->unit ?? '' ),
                 'price'      => number_format( (float) $item->price, 2 ),
+                'track_stock'=> (int) $item->track_stock,
+                'stock_qty'  => number_format( (float) $item->stock_qty, 2 ),
+                'min_stock'  => number_format( (float) $item->min_stock, 2 ),
+                'cost_price' => number_format( (float) $item->cost_price, 2 ),
+                'is_critical'=> ( (int) $item->track_stock === 1 ) && (float) $item->stock_qty <= (float) $item->min_stock,
                 'edit_url'   => admin_url( 'admin.php?page=tps-products-services-add&ps_id=' . $id ),
                 'delete_url' => wp_nonce_url( admin_url( 'admin-post.php?action=tps_delete_product_service&ps_id=' . $id ), 'tps_delete_product_service' ),
             );
@@ -98,6 +105,15 @@ class TPS_Products_Services_Controller {
         $raw_price = isset( $_POST['price'] ) ? wp_unslash( $_POST['price'] ) : '0';
         $raw_price = str_replace( ',', '.', (string) $raw_price );
         $price     = is_numeric( $raw_price ) ? (float) $raw_price : -1;
+        $raw_min_stock = isset( $_POST['min_stock'] ) ? wp_unslash( $_POST['min_stock'] ) : '0';
+        $raw_min_stock = str_replace( ',', '.', (string) $raw_min_stock );
+        $min_stock     = is_numeric( $raw_min_stock ) ? (float) $raw_min_stock : -1;
+        $raw_stock_qty = isset( $_POST['stock_qty'] ) ? wp_unslash( $_POST['stock_qty'] ) : '0';
+        $raw_stock_qty = str_replace( ',', '.', (string) $raw_stock_qty );
+        $stock_qty     = is_numeric( $raw_stock_qty ) ? (float) $raw_stock_qty : -1;
+        $raw_cost_price = isset( $_POST['cost_price'] ) ? wp_unslash( $_POST['cost_price'] ) : '0';
+        $raw_cost_price = str_replace( ',', '.', (string) $raw_cost_price );
+        $cost_price     = is_numeric( $raw_cost_price ) ? (float) $raw_cost_price : -1;
 
         $data = array(
             'type'        => isset( $_POST['type'] ) ? sanitize_text_field( wp_unslash( $_POST['type'] ) ) : '',
@@ -105,10 +121,14 @@ class TPS_Products_Services_Controller {
             'sku'         => isset( $_POST['sku'] ) ? sanitize_text_field( wp_unslash( $_POST['sku'] ) ) : '',
             'unit'        => isset( $_POST['unit'] ) ? sanitize_text_field( wp_unslash( $_POST['unit'] ) ) : '',
             'price'       => $price,
+            'track_stock' => isset( $_POST['track_stock'] ) ? 1 : 0,
+            'min_stock'   => $min_stock,
+            'stock_qty'   => $stock_qty,
+            'cost_price'  => $cost_price,
             'description' => isset( $_POST['description'] ) ? sanitize_textarea_field( wp_unslash( $_POST['description'] ) ) : '',
         );
 
-        if ( empty( $data['name'] ) || ! in_array( $data['type'], array( 'product', 'service' ), true ) || $data['price'] < 0 ) {
+        if ( empty( $data['name'] ) || ! in_array( $data['type'], array( 'product', 'service' ), true ) || $data['price'] < 0 || $data['min_stock'] < 0 || $data['stock_qty'] < 0 || $data['cost_price'] < 0 ) {
             $redirect = admin_url( 'admin.php?page=tps-products-services-add' );
             if ( $id > 0 ) {
                 $redirect = add_query_arg( 'ps_id', $id, $redirect );
@@ -116,6 +136,13 @@ class TPS_Products_Services_Controller {
 
             wp_safe_redirect( esc_url_raw( tps_notice_url( $redirect, 'product_service_invalid_data', 'error' ) ) );
             exit;
+        }
+
+        if ( 'service' === $data['type'] ) {
+            $data['track_stock'] = 0;
+            $data['min_stock']   = 0;
+            $data['stock_qty']   = 0;
+            $data['cost_price']  = 0;
         }
 
         if ( $id > 0 ) {

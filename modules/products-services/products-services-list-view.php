@@ -3,16 +3,17 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-$total_items     = (int) TPS_Products_Services_Model::count_items( array() );
-$total_products  = (int) TPS_Products_Services_Model::count_items( array( 'type' => 'product' ) );
-$total_services  = (int) TPS_Products_Services_Model::count_items( array( 'type' => 'service' ) );
-$ajax_list_nonce?>
+$total_items    = (int) TPS_Products_Services_Model::count_items( array() );
+$total_products = (int) TPS_Products_Services_Model::count_items( array( 'type' => 'product' ) );
+$total_services = (int) TPS_Products_Services_Model::count_items( array( 'type' => 'service' ) );
+$critical_items = (int) TPS_Products_Services_Model::count_critical_products();
+?>
 
 <div class="wrap tps-products-modern">
     <section class="tps-header">
         <div>
-            <h1><span class="dashicons dashicons-cart tps-icon" aria-hidden="true"></span>Produtos e Serviços</h1>
-            <p class="tps-subtitle">Gestão de catálogo com filtros e paginação via AJAX.</p>
+            <h1><span class="dashicons dashicons-cart tps-icon" aria-hidden="true"></span>Produtos e Servicos</h1>
+            <p class="tps-subtitle">Gestao de catalogo com filtros, stock e custo medio.</p>
         </div>
         <div class="tps-actions">
             <a href="<?php echo esc_url( admin_url( 'admin.php?page=tps-products-services-add' ) ); ?>" class="tps-btn"><span class="dashicons dashicons-plus-alt2 tps-icon" aria-hidden="true"></span>Adicionar Item</a>
@@ -29,22 +30,27 @@ $ajax_list_nonce?>
             <p class="tps-stat-value"><?php echo esc_html( (string) $total_products ); ?></p>
         </article>
         <article class="tps-stat">
-            <p class="tps-stat-head"><span class="dashicons dashicons-admin-tools tps-stat-icon" aria-hidden="true"></span><span class="tps-stat-label">Serviços</span></p>
+            <p class="tps-stat-head"><span class="dashicons dashicons-admin-tools tps-stat-icon" aria-hidden="true"></span><span class="tps-stat-label">Servicos</span></p>
             <p class="tps-stat-value"><?php echo esc_html( (string) $total_services ); ?></p>
+        </article>
+        <article class="tps-stat">
+            <p class="tps-stat-head"><span class="dashicons dashicons-warning tps-stat-icon" aria-hidden="true"></span><span class="tps-stat-label">Stock Critico</span></p>
+            <p class="tps-stat-value"><?php echo esc_html( (string) $critical_items ); ?></p>
         </article>
     </section>
 
     <section class="tps-toolbar">
-        <input id="tps-ps-search" class="tps-search" type="search" placeholder="Pesquisar por nome, código ou descrição">
+        <input id="tps-ps-search" class="tps-search" type="search" placeholder="Pesquisar por nome, codigo ou descricao">
         <select id="tps-ps-sort" class="tps-select">
             <option value="name">Ordenar por nome</option>
-            <option value="price">Ordenar por preço</option>
+            <option value="price">Ordenar por preco</option>
+            <option value="stock">Ordenar por stock</option>
             <option value="date">Ordenar por data</option>
         </select>
         <div class="tps-filters">
             <button class="tps-filter is-active" data-type=""><span class="dashicons dashicons-list-view" aria-hidden="true"></span>Todos</button>
             <button class="tps-filter" data-type="product"><span class="dashicons dashicons-products" aria-hidden="true"></span>Produtos</button>
-            <button class="tps-filter" data-type="service"><span class="dashicons dashicons-admin-tools" aria-hidden="true"></span>Serviços</button>
+            <button class="tps-filter" data-type="service"><span class="dashicons dashicons-admin-tools" aria-hidden="true"></span>Servicos</button>
         </div>
     </section>
 
@@ -52,7 +58,15 @@ $ajax_list_nonce?>
         <table>
             <thead>
                 <tr>
-                    <th>Nome</th><th>Tipo</th><th>Código</th><th>Unidade</th><th>Preço</th><th>Ações</th>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>Codigo</th>
+                    <th>Unidade</th>
+                    <th>Preco</th>
+                    <th>Stock</th>
+                    <th>Minimo</th>
+                    <th>Custo Medio</th>
+                    <th>Acoes</th>
                 </tr>
             </thead>
             <tbody id="tps-ps-tbody"></tbody>
@@ -60,9 +74,8 @@ $ajax_list_nonce?>
         <div id="tps-ps-empty" class="tps-empty" hidden>Nenhum item encontrado.</div>
         <div class="tps-pagination">
             <button id="tps-ps-prev" class="tps-page-btn">Anterior</button>
-            <span id="tps-ps-page">Página 1</span>
+            <span id="tps-ps-page">Pagina 1</span>
             <button id="tps-ps-next" class="tps-page-btn">Seguinte</button>
         </div>
     </section>
 </div>
-

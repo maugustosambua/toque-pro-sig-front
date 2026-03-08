@@ -109,6 +109,22 @@ foreach ( $data['charts']['type_breakdown'] as $type_row ) {
                 <span>Taxa: <?php echo esc_html( number_format( tps_get_iva_rate() * 100, 2 ) ); ?>%</span>
             </div>
         </article>
+        <article class="tps-kpi">
+            <p class="tps-kpi-head"><span class="dashicons dashicons-money-alt tps-kpi-icon" aria-hidden="true"></span><span class="tps-kpi-label">Por Receber</span></p>
+            <p class="tps-kpi-value"><?php echo esc_html( $format_money( $kpis['receivable_total'] ) ); ?></p>
+            <div class="tps-kpi-meta">
+                <span>Saldo pendente</span>
+                <span>Vencido: <?php echo esc_html( $format_money( $kpis['overdue_total'] ) ); ?></span>
+            </div>
+        </article>
+        <article class="tps-kpi">
+            <p class="tps-kpi-head"><span class="dashicons dashicons-warning tps-kpi-icon" aria-hidden="true"></span><span class="tps-kpi-label">Stock Critico</span></p>
+            <p class="tps-kpi-value"><?php echo esc_html( $format_int( $kpis['critical_products'] ) ); ?></p>
+            <div class="tps-kpi-meta">
+                <span>Produtos abaixo do minimo</span>
+                <span><a href="<?php echo esc_url( admin_url( 'admin.php?page=tps-inventory' ) ); ?>">Abrir Stock</a></span>
+            </div>
+        </article>
     </section>
 
     <section class="tps-grid-main">
@@ -190,6 +206,29 @@ foreach ( $data['charts']['type_breakdown'] as $type_row ) {
                                 <td><?php echo esc_html( $row['customer_name'] ? $row['customer_name'] : '-' ); ?></td>
                                 <td><span class="tps-status-pill tps-status-<?php echo esc_attr( $row['status'] ); ?>"><?php echo esc_html( $status_labels[ $row['status'] ] ?? $row['status'] ); ?></span></td>
                                 <td><a href="<?php echo esc_url( $row['edit_url'] ); ?>">Abrir</a></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </article>
+        <article class="tps-panel">
+            <h2 class="tps-panel-title"><span class="dashicons dashicons-warning tps-icon" aria-hidden="true"></span>Produtos Criticos</h2>
+            <?php if ( empty( $data['critical_products'] ) ) : ?>
+                <p class="tps-empty">Sem alertas de stock minimo.</p>
+            <?php else : ?>
+                <table>
+                    <thead>
+                        <tr><th>Produto</th><th>SKU</th><th>Saldo</th><th>Minimo</th><th>Custo</th></tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ( $data['critical_products'] as $row ) : ?>
+                            <tr>
+                                <td><?php echo esc_html( $row['name'] ); ?></td>
+                                <td><?php echo esc_html( $row['sku'] ? $row['sku'] : '-' ); ?></td>
+                                <td><?php echo esc_html( number_format( (float) $row['stock_qty'], 2 ) ); ?></td>
+                                <td><?php echo esc_html( number_format( (float) $row['min_stock'], 2 ) ); ?></td>
+                                <td><?php echo esc_html( $format_money( $row['cost_price'] ) ); ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
