@@ -15,6 +15,10 @@ class TPS_Schema {
         self::create_stock_movements_table();
         self::create_payments_table();
         self::create_payment_allocations_table();
+        self::create_fiscal_events_table();
+        self::create_audit_trail_table();
+        self::create_fiscal_snapshots_table();
+        self::create_fiscal_monthly_closures_table();
     }
 
 
@@ -56,20 +60,33 @@ class TPS_Schema {
             type VARCHAR(20) NOT NULL,
             number BIGINT UNSIGNED NOT NULL,
             customer_id BIGINT UNSIGNED NOT NULL,
+            original_document_id BIGINT UNSIGNED DEFAULT NULL,
+            adjustment_reason TEXT DEFAULT NULL,
             status VARCHAR(20) NOT NULL DEFAULT 'draft',
             issue_date DATE NULL,
             due_date DATE NULL,
+            withholding_rate DECIMAL(5,2) NOT NULL DEFAULT 0,
+            withholding_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
             payment_status VARCHAR(20) NOT NULL DEFAULT 'pending',
             paid_total DECIMAL(10,2) NOT NULL DEFAULT 0,
             balance_due DECIMAL(10,2) NOT NULL DEFAULT 0,
+            fiscal_prev_hash CHAR(64) DEFAULT NULL,
+            fiscal_hash CHAR(64) DEFAULT NULL,
+            fiscal_hashed_at DATETIME NULL,
+            cancel_reason TEXT DEFAULT NULL,
+            cancelled_at DATETIME NULL,
+            cancelled_by BIGINT UNSIGNED DEFAULT NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             KEY type (type),
             KEY customer_id (customer_id),
+            KEY original_document_id (original_document_id),
             KEY status (status),
             KEY due_date (due_date),
-            KEY payment_status (payment_status)
+            KEY payment_status (payment_status),
+            KEY fiscal_hash (fiscal_hash),
+            KEY cancelled_by (cancelled_by)
         ) {$charset};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -90,10 +107,16 @@ class TPS_Schema {
             description TEXT NOT NULL,
             quantity DECIMAL(10,2) NOT NULL DEFAULT 1,
             unit_price DECIMAL(10,2) NOT NULL DEFAULT 0,
+            tax_mode VARCHAR(20) NOT NULL DEFAULT 'taxable',
+            tax_rate DECIMAL(5,2) NOT NULL DEFAULT 0,
+            exemption_code VARCHAR(50) DEFAULT NULL,
+            exemption_reason VARCHAR(191) DEFAULT NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             KEY document_id (document_id),
-            KEY product_service_id (product_service_id)
+            KEY product_service_id (product_service_id),
+            KEY tax_mode (tax_mode),
+            KEY exemption_code (exemption_code)
         ) {$charset};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -206,6 +229,129 @@ class TPS_Schema {
             PRIMARY KEY (id),
             KEY payment_id (payment_id),
             KEY document_id (document_id)
+        ) {$charset};";
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta( $sql );
+    }
+
+    // Tabela de eventos fiscais para auditoria.
+    public static function create_fiscal_events_table() {
+        global $wpdb;
+
+        $table   = $wpdb->prefix . 'tps_fiscal_events';
+        $charset = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE {$table} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            document_id BIGINT UNSIGNED NOT NULL,
+            event_type VARCHAR(50) NOT NULL,
+            payload LONGTEXT NULL,
+            user_id BIGINT UNSIGNED DEFAULT NULL,
+            prev_event_hash CHAR(64) DEFAULT NULL,
+            event_hash CHAR(64) DEFAULT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY document_id (document_id),
+            KEY event_type (event_type),
+            KEY user_id (user_id),
+            KEY event_hash (event_hash),
+            KEY created_at (created_at)
+        ) {$charset};";
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta( $sql );
+    }
+
+    // Tabela de trilha de auditoria para eventos criticos.
+    public static function create_audit_trail_table() {
+        global $wpdb;
+
+        $table   = $wpdb->prefix . 'tps_audit_trail';
+        $charset = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE {$table} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            event_type VARCHAR(80) NOT NULL,
+            entity_type VARCHAR(50) NOT NULL,
+            entity_id BIGINT UNSIGNED DEFAULT NULL,
+            user_id BIGINT UNSIGNED DEFAULT NULL,
+            before_state LONGTEXT NULL,
+            after_state LONGTEXT NULL,
+            meta LONGTEXT NULL,
+            ip_address VARCHAR(64) DEFAULT NULL,
+            user_agent VARCHAR(255) DEFAULT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY event_type (event_type),
+            KEY entity_type (entity_type),
+            KEY entity_id (entity_id),
+            KEY user_id (user_id),
+            KEY created_at (created_at)
+        ) {$charset};";
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta( $sql );
+    }
+
+    // Tabela de snapshots fiscais imutaveis por documento.
+    public static function create_fiscal_snapshots_table() {
+        global $wpdb;
+
+        $table   = $wpdb->prefix . 'tps_fiscal_snapshots';
+        $charset = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE {$table} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            document_id BIGINT UNSIGNED NOT NULL,
+            snapshot_type VARCHAR(30) NOT NULL,
+            prev_snapshot_hash CHAR(64) DEFAULT NULL,
+            snapshot_hash CHAR(64) NOT NULL,
+            payload LONGTEXT NOT NULL,
+            created_by BIGINT UNSIGNED DEFAULT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY document_id (document_id),
+            KEY snapshot_hash (snapshot_hash),
+            KEY created_at (created_at),
+            UNIQUE KEY uq_doc_snapshot_hash (document_id, snapshot_hash)
+        ) {$charset};";
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta( $sql );
+    }
+
+    // Tabela de fechos fiscais mensais.
+    public static function create_fiscal_monthly_closures_table() {
+        global $wpdb;
+
+        $table   = $wpdb->prefix . 'tps_fiscal_monthly_closures';
+        $charset = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE {$table} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            period_ym CHAR(7) NOT NULL,
+            period_start DATE NOT NULL,
+            period_end DATE NOT NULL,
+            documents_count INT UNSIGNED NOT NULL DEFAULT 0,
+            issued_count INT UNSIGNED NOT NULL DEFAULT 0,
+            cancelled_count INT UNSIGNED NOT NULL DEFAULT 0,
+            subtotal DECIMAL(14,2) NOT NULL DEFAULT 0,
+            iva DECIMAL(14,2) NOT NULL DEFAULT 0,
+            withholding_amount DECIMAL(14,2) NOT NULL DEFAULT 0,
+            payable_total DECIMAL(14,2) NOT NULL DEFAULT 0,
+            payments_total DECIMAL(14,2) NOT NULL DEFAULT 0,
+            open_balance_total DECIMAL(14,2) NOT NULL DEFAULT 0,
+            closure_prev_hash CHAR(64) DEFAULT NULL,
+            closure_hash CHAR(64) DEFAULT NULL,
+            payload LONGTEXT NULL,
+            closed_by BIGINT UNSIGNED DEFAULT NULL,
+            closed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY period_ym (period_ym),
+            KEY closure_hash (closure_hash),
+            KEY closed_by (closed_by),
+            KEY closed_at (closed_at)
         ) {$charset};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';

@@ -14,21 +14,21 @@ class TPS_Payments_Controller {
 
     // Regista um recebimento.
     public static function register_payment() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'receber' ) ) {
             wp_die( 'Sem permissao para executar esta accao.' );
         }
 
         check_admin_referer( 'tps_register_payment' );
 
-        $document_id = isset( $_POST['document_id'] ) ? (int) $_POST['document_id'] : 0;
-        $redirect_to = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : admin_url( 'admin.php?page=tps-payments' );
+        $document_id = self::read_post_int( 'document_id' );
+        $redirect_to = isset( $_POST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_POST['redirect_to'] ) ) : tps_get_page_url( 'tps-payments' );
         $document    = TPS_Documents_Model::get( $document_id );
 
         if ( ! $document || 'issued' !== $document->status ) {
             self::redirect_with_notice( $redirect_to, 'payment_invalid_document', 'error' );
         }
 
-        $amount = isset( $_POST['amount'] ) ? (float) $_POST['amount'] : 0;
+        $amount = self::read_post_float( 'amount' );
         if ( $amount <= 0 ) {
             self::redirect_with_notice( $redirect_to, 'payment_invalid_amount', 'error' );
         }
@@ -44,7 +44,10 @@ class TPS_Payments_Controller {
             $method = 'cash';
         }
 
-        $payment_date = isset( $_POST['payment_date'] ) ? sanitize_text_field( wp_unslash( $_POST['payment_date'] ) ) : wp_date( 'Y-m-d' );
+        $payment_date = self::read_post_text( 'payment_date', wp_date( 'Y-m-d' ) );
+        if ( ! self::is_valid_date_ymd( $payment_date ) ) {
+            $payment_date = wp_date( 'Y-m-d' );
+        }
 
         $payment_id = TPS_Payments_Model::record_payment(
             array(
@@ -72,13 +75,13 @@ class TPS_Payments_Controller {
 
     // Gera recibo em PDF.
     public static function download_receipt() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can_any( array( 'receber', 'exportar' ) ) ) {
             wp_die();
         }
 
         check_admin_referer( 'tps_download_payment_receipt' );
 
-        $payment_id = isset( $_GET['payment_id'] ) ? (int) $_GET['payment_id'] : 0;
+        $payment_id = isset( $_GET['payment_id'] ) ? (int) wp_unslash( $_GET['payment_id'] ) : 0;
         $payment    = TPS_Payments_Model::get( $payment_id );
 
         if ( ! $payment ) {
@@ -134,5 +137,39 @@ class TPS_Payments_Controller {
             )
         );
         exit;
+    }
+
+    private static function read_post_text( $key, $default = '' ) {
+        if ( ! isset( $_POST[ $key ] ) ) {
+            return (string) $default;
+        }
+
+        return sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
+    }
+
+    private static function read_post_int( $key, $default = 0 ) {
+        if ( ! isset( $_POST[ $key ] ) ) {
+            return (int) $default;
+        }
+
+        return (int) wp_unslash( $_POST[ $key ] );
+    }
+
+    private static function read_post_float( $key, $default = 0.0 ) {
+        if ( ! isset( $_POST[ $key ] ) ) {
+            return (float) $default;
+        }
+
+        return (float) wp_unslash( $_POST[ $key ] );
+    }
+
+    private static function is_valid_date_ymd( $value ) {
+        if ( ! is_string( $value ) || '' === $value ) {
+            return false;
+        }
+
+        $date = \DateTime::createFromFormat( 'Y-m-d', $value );
+
+        return $date instanceof \DateTime && $date->format( 'Y-m-d' ) === $value;
     }
 }

@@ -16,10 +16,11 @@ if (! $document) {
 }
 
 $lines = TPS_Document_Lines_Model::get_by_document($document_id);
-
-$subtotal = TPS_Document_Lines_Model::document_total($document_id);
-$iva      = tps_calculate_iva($subtotal);
-$total    = $subtotal + $iva;
+$fiscal_totals = TPS_Documents_Model::fiscal_totals($document_id);
+$subtotal = (float) $fiscal_totals['subtotal'];
+$iva      = (float) $fiscal_totals['iva'];
+$retencao = (float) $fiscal_totals['withholding_amount'];
+$total    = (float) $fiscal_totals['payable_total'];
 
 // Empresa (Configuracoes)
 $settings = get_option('tps_settings', array());
@@ -27,7 +28,7 @@ $company  = $settings['company_name'] ?? '';
 $nuit     = $settings['company_nuit'] ?? '';
 $type_labels = TPS_Documents_Model::types();
 $status_labels = TPS_Documents_Model::statuses();
-$back_url = admin_url('admin.php?page=tps-documents-add&document_id=' . (int) $document_id);
+$back_url = tps_get_page_url('tps-documents-add', array('document_id' => (int) $document_id));
 
 $print_css_url = tps_get_asset_url( 'assets/css/document-print.css' );
 $print_css_ver = tps_get_asset_version( 'assets/css/document-print.css' );
@@ -48,10 +49,11 @@ $print_js_ver = tps_get_asset_version( 'assets/js/document-print.js' );
 
             <div class="no-print toolbar">
                 <a class="back-btn" href="<?php echo esc_url($back_url); ?>">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M14.7 5.3a1 1 0 0 1 0 1.4L10.41 11H20a1 1 0 1 1 0 2h-9.59l4.3 4.3a1 1 0 0 1-1.42 1.4l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 1.41 0Z"/></svg>
                     <span>Voltar</span>
                 </a>
-                <button id="tps-print-btn" type="button">Imprimir / Guardar como PDF</button>
+                <button id="tps-print-btn" type="button">
+                    <span>Imprimir / Guardar como PDF</span>
+                </button>
             </div>
 
             <div class="header">
@@ -80,6 +82,12 @@ $print_js_ver = tps_get_asset_version( 'assets/js/document-print.js' );
                     <div><strong>Telefone:</strong> <?php echo esc_html((string) $document->customer_phone); ?></div>
                 <?php endif; ?>
                 <div><strong>ID do Cliente:</strong> <?php echo esc_html((string) $document->customer_id); ?></div>
+                <?php if (! empty($document->original_document_id)) : ?>
+                    <div><strong>Documento Original:</strong> #<?php echo esc_html((string) ($document->original_document_number ?? $document->original_document_id)); ?></div>
+                    <?php if (! empty($document->adjustment_reason)) : ?>
+                        <div><strong>Justificativa:</strong> <?php echo esc_html((string) $document->adjustment_reason); ?></div>
+                    <?php endif; ?>
+                <?php endif; ?>
             </div>
 
             <table>
@@ -113,7 +121,11 @@ $print_js_ver = tps_get_asset_version( 'assets/js/document-print.js' );
                     <td class="right"><?php echo number_format($iva, 2); ?></td>
                 </tr>
                 <tr>
-                    <th>Total</th>
+                    <th>Retencao (<?php echo number_format((float) $document->withholding_rate, 2); ?>%)</th>
+                    <td class="right">-<?php echo number_format($retencao, 2); ?></td>
+                </tr>
+                <tr>
+                    <th>Total Liquido</th>
                     <td class="right"><strong><?php echo number_format($total, 2); ?></strong></td>
                 </tr>
             </table>

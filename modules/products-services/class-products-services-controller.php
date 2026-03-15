@@ -15,7 +15,7 @@ class TPS_Products_Services_Controller {
 
     // Lista AJAX paginada
     public static function list_ajax() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'admin' ) ) {
             wp_send_json_error( array( 'message' => 'Permissão negada.' ), 403 );
         }
 
@@ -77,8 +77,8 @@ class TPS_Products_Services_Controller {
                 'min_stock'  => number_format( (float) $item->min_stock, 2 ),
                 'cost_price' => number_format( (float) $item->cost_price, 2 ),
                 'is_critical'=> ( (int) $item->track_stock === 1 ) && (float) $item->stock_qty <= (float) $item->min_stock,
-                'edit_url'   => admin_url( 'admin.php?page=tps-products-services-add&ps_id=' . $id ),
-                'delete_url' => wp_nonce_url( admin_url( 'admin-post.php?action=tps_delete_product_service&ps_id=' . $id ), 'tps_delete_product_service' ),
+                'edit_url'   => tps_get_page_url( 'tps-products-services-add', array( 'ps_id' => $id ) ),
+                'delete_url' => wp_nonce_url( add_query_arg( array( 'action' => 'tps_delete_product_service', 'ps_id' => $id ), tps_get_action_url() ), 'tps_delete_product_service' ),
             );
         }
 
@@ -94,7 +94,7 @@ class TPS_Products_Services_Controller {
 
     // Cria ou actualiza item
     public static function save() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'admin' ) ) {
             wp_die( 'Sem permissao para executar esta accao.' );
         }
 
@@ -129,7 +129,7 @@ class TPS_Products_Services_Controller {
         );
 
         if ( empty( $data['name'] ) || ! in_array( $data['type'], array( 'product', 'service' ), true ) || $data['price'] < 0 || $data['min_stock'] < 0 || $data['stock_qty'] < 0 || $data['cost_price'] < 0 ) {
-            $redirect = admin_url( 'admin.php?page=tps-products-services-add' );
+            $redirect = tps_get_page_url( 'tps-products-services-add' );
             if ( $id > 0 ) {
                 $redirect = add_query_arg( 'ps_id', $id, $redirect );
             }
@@ -153,13 +153,13 @@ class TPS_Products_Services_Controller {
             $notice = 'product_service_created';
         }
 
-        wp_safe_redirect( esc_url_raw( tps_notice_url( admin_url( 'admin.php?page=tps-products-services' ), $notice, 'success' ) ) );
+        wp_safe_redirect( esc_url_raw( tps_notice_url( tps_get_page_url( 'tps-products-services' ), $notice, 'success' ) ) );
         exit;
     }
 
     // Remove item
     public static function delete() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'admin' ) ) {
             wp_die( 'Sem permissao para executar esta accao.' );
         }
 
@@ -168,9 +168,9 @@ class TPS_Products_Services_Controller {
         $id = isset( $_GET['ps_id'] ) ? (int) $_GET['ps_id'] : 0;
         if ( $id > 0 ) {
             TPS_Products_Services_Model::delete( $id );
-            $redirect = tps_notice_url( admin_url( 'admin.php?page=tps-products-services' ), 'product_service_deleted', 'success' );
+            $redirect = tps_notice_url( tps_get_page_url( 'tps-products-services' ), 'product_service_deleted', 'success' );
         } else {
-            $redirect = tps_notice_url( admin_url( 'admin.php?page=tps-products-services' ), 'product_service_delete_invalid', 'error' );
+            $redirect = tps_notice_url( tps_get_page_url( 'tps-products-services' ), 'product_service_delete_invalid', 'error' );
         }
 
         wp_safe_redirect( esc_url_raw( $redirect ) );

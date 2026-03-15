@@ -25,13 +25,13 @@ $total_movements = TPS_Inventory_Model::count_movements(
 
 <div class="wrap tps-documents-modern tps-inventory-movements-modern">
     <section class="tps-header">
-        <div class="tps-header-row">
-            <a class="tps-back-btn" href="<?php echo esc_url( admin_url( 'admin.php?page=tps-inventory' ) ); ?>">
+        <div class="tps-header-row tps-header-row--back">
+            <a class="tps-back-btn" href="<?php echo esc_url( tps_get_page_url( 'tps-inventory' ) ); ?>">
                 <span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>
                 <span>Voltar</span>
             </a>
             <div class="tps-header-content">
-                <h1><span class="dashicons dashicons-sort tps-icon" aria-hidden="true"></span>Movimentos</h1>
+                <h1>Movimentos</h1>
                 <p class="tps-subtitle">Historico de entradas, saidas, ajustes e baixas automaticas integradas com documentos.</p>
             </div>
         </div>
@@ -50,15 +50,15 @@ $total_movements = TPS_Inventory_Model::count_movements(
 
     <section class="tps-toolbar tps-inventory-toolbar">
         <form method="get" class="tps-toolbar-form">
-            <input type="hidden" name="page" value="tps-stock-movements">
-            <input class="tps-search" type="search" name="search" value="<?php echo esc_attr( $search ); ?>" placeholder="Pesquisar por produto, SKU ou referencia">
-            <select class="tps-select" name="movement_type">
+            <input type="hidden" name="tps_view" value="tps-stock-movements">
+            <div><input class="tps-search tps-input" type="search" name="search" value="<?php echo esc_attr( $search ); ?>" placeholder="Pesquisar por produto, SKU ou referencia"></div>
+            <div><select class="tps-select" name="movement_type">
                 <option value="">Todos os tipos</option>
                 <?php foreach ( $types as $type_key => $type_label ) : ?>
                     <option value="<?php echo esc_attr( $type_key ); ?>" <?php selected( $movement_type, $type_key ); ?>><?php echo esc_html( $type_label ); ?></option>
                 <?php endforeach; ?>
-            </select>
-            <button class="tps-btn tps-btn-secondary" type="submit">Filtrar</button>
+            </select></div>
+            <div><button class="tps-btn tps-btn-secondary w-100" type="submit">Filtrar</button></div>
         </form>
     </section>
 

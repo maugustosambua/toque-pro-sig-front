@@ -69,7 +69,7 @@ class TPS_Customers_Model
     {
         global $wpdb;
 
-        return $wpdb->insert(
+        $inserted = $wpdb->insert(
             self::table(),
             array(
                 'type'       => $data['type'],
@@ -85,6 +85,14 @@ class TPS_Customers_Model
                 '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s',
             )
         );
+
+        if ( false !== $inserted ) {
+            $customer_id = (int) $wpdb->insert_id;
+            $after       = self::get( $customer_id );
+            tps_audit_log( 'customer_created', 'customer', $customer_id, null, $after );
+        }
+
+        return $inserted;
     }
 
     // Actualiza um cliente existente
@@ -92,7 +100,10 @@ class TPS_Customers_Model
     {
         global $wpdb;
 
-        return $wpdb->update(
+        $id     = (int) $id;
+        $before = self::get( $id );
+
+        $updated = $wpdb->update(
             self::table(),
             array(
                 'type'       => $data['type'],
@@ -104,12 +115,19 @@ class TPS_Customers_Model
                 'city'       => $data['city'],
                 'updated_at' => current_time('mysql'),
             ),
-            array( 'id' => (int) $id ),
+            array( 'id' => $id ),
             array(
                 '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s',
             ),
             array( '%d' )
         );
+
+        if ( false !== $updated ) {
+            $after = self::get( $id );
+            tps_audit_log( 'customer_updated', 'customer', $id, $before, $after );
+        }
+
+        return $updated;
     }
 
     // Remove um cliente
@@ -117,11 +135,20 @@ class TPS_Customers_Model
     {
         global $wpdb;
 
-        return $wpdb->delete(
+        $id     = (int) $id;
+        $before = self::get( $id );
+
+        $deleted = $wpdb->delete(
             self::table(),
-            array( 'id' => (int) $id ),
+            array( 'id' => $id ),
             array( '%d' )
         );
+
+        if ( false !== $deleted && null !== $before ) {
+            tps_audit_log( 'customer_deleted', 'customer', $id, $before, null );
+        }
+
+        return $deleted;
     }
 
     // Retorna um cliente pelo ID

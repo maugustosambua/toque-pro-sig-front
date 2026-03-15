@@ -72,7 +72,7 @@ class TPS_Products_Services_Model {
     public static function insert( $data ) {
         global $wpdb;
 
-        return $wpdb->insert(
+        $inserted = $wpdb->insert(
             self::table(),
             array(
                 'type'        => $data['type'],
@@ -89,13 +89,25 @@ class TPS_Products_Services_Model {
             ),
             array( '%s', '%s', '%s', '%s', '%f', '%d', '%f', '%f', '%f', '%s', '%s' )
         );
+
+        if ( false !== $inserted ) {
+            $item_id = (int) $wpdb->insert_id;
+            $after   = self::get( $item_id );
+            tps_audit_log( 'product_service_created', 'product_service', $item_id, null, $after );
+        }
+
+        return $inserted;
     }
 
     // Actualiza item
     public static function update( $id, $data ) {
         global $wpdb;
 
-        return $wpdb->update(
+        $id     = (int) $id;
+        $before = self::get( $id );
+        $skip_audit = ! empty( $data['_skip_audit'] );
+
+        $updated = $wpdb->update(
             self::table(),
             array(
                 'type'        => $data['type'],
@@ -110,21 +122,37 @@ class TPS_Products_Services_Model {
                 'description' => $data['description'],
                 'updated_at'  => current_time( 'mysql' ),
             ),
-            array( 'id' => (int) $id ),
+            array( 'id' => $id ),
             array( '%s', '%s', '%s', '%s', '%f', '%d', '%f', '%f', '%f', '%s', '%s' ),
             array( '%d' )
         );
+
+        if ( false !== $updated && ! $skip_audit ) {
+            $after = self::get( $id );
+            tps_audit_log( 'product_service_updated', 'product_service', $id, $before, $after );
+        }
+
+        return $updated;
     }
 
     // Remove item
     public static function delete( $id ) {
         global $wpdb;
 
-        return $wpdb->delete(
+        $id     = (int) $id;
+        $before = self::get( $id );
+
+        $deleted = $wpdb->delete(
             self::table(),
-            array( 'id' => (int) $id ),
+            array( 'id' => $id ),
             array( '%d' )
         );
+
+        if ( false !== $deleted && null !== $before ) {
+            tps_audit_log( 'product_service_deleted', 'product_service', $id, $before, null );
+        }
+
+        return $deleted;
     }
 
     // Retorna item por ID

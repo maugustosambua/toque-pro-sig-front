@@ -16,7 +16,7 @@ class TPS_Customers_Import_Export {
 
     // Exporta um cliente especifico.
     public static function export_customer() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'exportar' ) ) {
             wp_die( 'Sem permissao para executar esta accao.' );
         }
 
@@ -45,14 +45,16 @@ class TPS_Customers_Import_Export {
         fputcsv( $out, array( 'type', 'name', 'nuit', 'email', 'phone', 'address', 'city' ) );
         fputcsv(
             $out,
-            array(
-                $customer->type,
-                $customer->name,
-                $customer->nuit,
-                $customer->email,
-                $customer->phone,
-                $customer->address,
-                $customer->city,
+            self::csv_safe_row(
+                array(
+                    $customer->type,
+                    $customer->name,
+                    $customer->nuit,
+                    $customer->email,
+                    $customer->phone,
+                    $customer->address,
+                    $customer->city,
+                )
             )
         );
         fclose( $out );
@@ -61,7 +63,7 @@ class TPS_Customers_Import_Export {
 
     // Exporta clientes (todos ou filtrados pela lista).
     public static function export_customers() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'exportar' ) ) {
             wp_die( 'Sem permissao para executar esta accao.' );
         }
 
@@ -102,14 +104,16 @@ class TPS_Customers_Import_Export {
         foreach ( $customers as $customer ) {
             fputcsv(
                 $out,
-                array(
-                    $customer->type,
-                    $customer->name,
-                    $customer->nuit,
-                    $customer->email,
-                    $customer->phone,
-                    $customer->address,
-                    $customer->city,
+                self::csv_safe_row(
+                    array(
+                        $customer->type,
+                        $customer->name,
+                        $customer->nuit,
+                        $customer->email,
+                        $customer->phone,
+                        $customer->address,
+                        $customer->city,
+                    )
                 )
             );
         }
@@ -121,7 +125,7 @@ class TPS_Customers_Import_Export {
     // Redirecciona com erro para a pagina de import.
     private static function redirect_import_error( $notice_code, $extra = array() ) {
         $url = tps_notice_url(
-            admin_url( 'admin.php?page=tps-customers-import' ),
+            tps_get_page_url( 'tps-customers-import' ),
             $notice_code,
             'error',
             $extra
@@ -132,7 +136,7 @@ class TPS_Customers_Import_Export {
 
     // Importa clientes via CSV.
     public static function import() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'admin' ) ) {
             wp_die( 'Sem permissao para executar esta accao.' );
         }
 
@@ -226,7 +230,7 @@ class TPS_Customers_Import_Export {
 
         $notice_type = ( $imported > 0 ) ? 'success' : 'warning';
         $url         = tps_notice_url(
-            admin_url( 'admin.php?page=tps-customers' ),
+            tps_get_page_url( 'tps-customers' ),
             'import_result',
             $notice_type,
             array(
@@ -237,5 +241,23 @@ class TPS_Customers_Import_Export {
         );
         wp_safe_redirect( esc_url_raw( $url ) );
         exit;
+    }
+
+    private static function csv_safe_row( $row ) {
+        if ( ! is_array( $row ) ) {
+            return array();
+        }
+
+        return array_map( array( __CLASS__, 'csv_safe_cell' ), $row );
+    }
+
+    private static function csv_safe_cell( $value ) {
+        $cell = (string) $value;
+
+        if ( preg_match( '/^\s*[=+\-@]/', $cell ) ) {
+            return "'" . $cell;
+        }
+
+        return $cell;
     }
 }

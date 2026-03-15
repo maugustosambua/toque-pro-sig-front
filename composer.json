@@ -7,5 +7,11 @@
         "php-stubs/wordpress-stubs": "^6.9",
         "phpstan/phpstan": "*",
         "vimeo/psalm": "*"
+    },
+    "scripts": {
+        "lint:phpcs": "phpcs --standard=phpcs.xml",
+        "fix:phpcs": "phpcbf --standard=phpcs.xml",
+        "lint:phpstan": "phpstan analyse -c phpstan.neon",
+        "lint:psalm": "psalm --no-cache"
     }
 }

@@ -17,7 +17,7 @@ class TPS_Customers_Controller {
 
     // Lista AJAX paginada de clientes.
     public static function list_ajax() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'admin' ) ) {
             wp_send_json_error( array( 'message' => 'Permissão negada.' ), 403 );
         }
 
@@ -67,14 +67,15 @@ class TPS_Customers_Controller {
         foreach ( $items as $item ) {
             $id     = (int) $item->id;
             $rows[] = array(
+                'id'         => $id,
                 'name'       => (string) $item->name,
                 'type'       => (string) $item->type,
                 'nuit'       => (string) ( $item->nuit ?? '' ),
                 'phone'      => (string) ( $item->phone ?? '' ),
                 'city'       => (string) ( $item->city ?? '' ),
-                'edit_url'   => admin_url( 'admin.php?page=tps-customers-add&customer_id=' . $id ),
-                'export_url' => wp_nonce_url( admin_url( 'admin-post.php?action=tps_export_customer&customer_id=' . $id ), 'tps_export_customer' ),
-                'delete_url' => wp_nonce_url( admin_url( 'admin-post.php?action=tps_delete_customer&customer_id=' . $id ), 'tps_delete_customer' ),
+                'edit_url'   => tps_get_page_url( 'tps-customers-add', array( 'customer_id' => $id ) ),
+                'export_url' => wp_nonce_url( add_query_arg( array( 'action' => 'tps_export_customer', 'customer_id' => $id ), tps_get_action_url() ), 'tps_export_customer' ),
+                'delete_url' => wp_nonce_url( add_query_arg( array( 'action' => 'tps_delete_customer', 'customer_id' => $id ), tps_get_action_url() ), 'tps_delete_customer' ),
             );
         }
 
@@ -90,25 +91,17 @@ class TPS_Customers_Controller {
 
     // Cria ou actualiza um cliente.
     public static function save() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'admin' ) ) {
             wp_die( 'Sem permissao para executar esta accao.' );
         }
 
         check_admin_referer( 'tps_save_customer' );
 
         $id   = isset( $_POST['id'] ) ? (int) $_POST['id'] : 0;
-        $data = array(
-            'type'    => isset( $_POST['type'] ) ? sanitize_text_field( wp_unslash( $_POST['type'] ) ) : '',
-            'name'    => isset( $_POST['name'] ) ? sanitize_text_field( wp_unslash( $_POST['name'] ) ) : '',
-            'nuit'    => isset( $_POST['nuit'] ) ? sanitize_text_field( wp_unslash( $_POST['nuit'] ) ) : '',
-            'email'   => isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '',
-            'phone'   => isset( $_POST['phone'] ) ? sanitize_text_field( wp_unslash( $_POST['phone'] ) ) : '',
-            'address' => isset( $_POST['address'] ) ? sanitize_textarea_field( wp_unslash( $_POST['address'] ) ) : '',
-            'city'    => isset( $_POST['city'] ) ? sanitize_text_field( wp_unslash( $_POST['city'] ) ) : '',
-        );
+        $data = self::sanitize_customer_payload( $_POST );
 
-        if ( empty( $data['name'] ) || ! in_array( $data['type'], array( 'individual', 'company' ), true ) ) {
-            $redirect = admin_url( 'admin.php?page=tps-customers-add' );
+        if ( ! self::is_customer_payload_valid( $data ) ) {
+            $redirect = tps_get_page_url( 'tps-customers-add' );
             if ( $id > 0 ) {
                 $redirect = add_query_arg( 'customer_id', $id, $redirect );
             }
@@ -116,21 +109,15 @@ class TPS_Customers_Controller {
             exit;
         }
 
-        if ( $id > 0 ) {
-            TPS_Customers_Model::update( $id, $data );
-            $notice = 'customer_updated';
-        } else {
-            TPS_Customers_Model::insert( $data );
-            $notice = 'customer_created';
-        }
+        $notice = self::persist_customer( $id, $data );
 
-        wp_safe_redirect( esc_url_raw( tps_notice_url( admin_url( 'admin.php?page=tps-customers' ), $notice, 'success' ) ) );
+        wp_safe_redirect( esc_url_raw( tps_notice_url( tps_get_page_url( 'tps-customers' ), $notice, 'success' ) ) );
         exit;
     }
 
     // Remove um cliente.
     public static function delete() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'admin' ) ) {
             wp_die( 'Sem permissao para executar esta accao.' );
         }
 
@@ -139,12 +126,38 @@ class TPS_Customers_Controller {
         $id = isset( $_GET['customer_id'] ) ? (int) $_GET['customer_id'] : 0;
         if ( $id > 0 ) {
             TPS_Customers_Model::delete( $id );
-            $redirect = tps_notice_url( admin_url( 'admin.php?page=tps-customers' ), 'customer_deleted', 'success' );
+            $redirect = tps_notice_url( tps_get_page_url( 'tps-customers' ), 'customer_deleted', 'success' );
         } else {
-            $redirect = tps_notice_url( admin_url( 'admin.php?page=tps-customers' ), 'customer_delete_invalid', 'error' );
+            $redirect = tps_notice_url( tps_get_page_url( 'tps-customers' ), 'customer_delete_invalid', 'error' );
         }
 
         wp_safe_redirect( esc_url_raw( $redirect ) );
         exit;
+    }
+
+    private static function sanitize_customer_payload( $source ) {
+        return array(
+            'type'    => isset( $source['type'] ) ? sanitize_text_field( wp_unslash( $source['type'] ) ) : '',
+            'name'    => isset( $source['name'] ) ? sanitize_text_field( wp_unslash( $source['name'] ) ) : '',
+            'nuit'    => isset( $source['nuit'] ) ? sanitize_text_field( wp_unslash( $source['nuit'] ) ) : '',
+            'email'   => isset( $source['email'] ) ? sanitize_email( wp_unslash( $source['email'] ) ) : '',
+            'phone'   => isset( $source['phone'] ) ? sanitize_text_field( wp_unslash( $source['phone'] ) ) : '',
+            'address' => isset( $source['address'] ) ? sanitize_textarea_field( wp_unslash( $source['address'] ) ) : '',
+            'city'    => isset( $source['city'] ) ? sanitize_text_field( wp_unslash( $source['city'] ) ) : '',
+        );
+    }
+
+    private static function is_customer_payload_valid( $data ) {
+        return ! empty( $data['name'] ) && in_array( $data['type'], array( 'individual', 'company' ), true );
+    }
+
+    private static function persist_customer( $id, $data ) {
+        if ( $id > 0 ) {
+            TPS_Customers_Model::update( $id, $data );
+            return 'customer_updated';
+        }
+
+        TPS_Customers_Model::insert( $data );
+        return 'customer_created';
     }
 }

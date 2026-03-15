@@ -15,17 +15,24 @@ class TPS_Loader {
         // Usado no bootstrap do plugin para carregar classes e helpers
         // antes de qualquer modulo registrar hooks no WordPress.
 
-        // Interface do admin
-        require_once TPS_PLUGIN_PATH . 'admin/class-admin-menus.php';
+        require_once TPS_PLUGIN_PATH . 'core/class-frontend-app.php';
         require_once TPS_PLUGIN_PATH . 'database/class-schema.php';
 
         // Utilitários
+        require_once TPS_PLUGIN_PATH . 'helpers/capabilities.php';
         require_once TPS_PLUGIN_PATH . 'helpers/tax.php';
         require_once TPS_PLUGIN_PATH . 'helpers/numbering.php';
         require_once TPS_PLUGIN_PATH . 'helpers/ui.php';
+        require_once TPS_PLUGIN_PATH . 'helpers/audit.php';
 
         // Garante que novas tabelas/colunas existam mesmo em installs ja activos.
         TPS_Schema::install();
+
+        // Garante que perfis tenham as capabilities granulares esperadas.
+        tps_maybe_sync_role_capabilities();
+
+        // Ativa guardas de segurança para capacidades nativas de plugins/temas/core.
+        tps_init_capability_guards();
 
 
         // Módulo Clientes
@@ -53,12 +60,14 @@ class TPS_Loader {
         // Módulo Configurações
         require_once TPS_PLUGIN_PATH . 'modules/settings/class-settings-controller.php';
         require_once TPS_PLUGIN_PATH . 'modules/dashboard/class-dashboard-controller.php';
+        require_once TPS_PLUGIN_PATH . 'modules/users/class-users-controller.php';
+        require_once TPS_PLUGIN_PATH . 'modules/audit/class-audit-controller.php';
         require_once TPS_PLUGIN_PATH . 'modules/login/class-login-customizer.php';
 
 
         // Inicializações
         self::init_controllers();
-        self::init_admin();
+        self::init_frontend();
     }
 
     // Inicializa controladores
@@ -73,14 +82,13 @@ class TPS_Loader {
         TPS_Inventory_Controller::init();
         TPS_Settings_Controller::init();
         TPS_Dashboard_Controller::init();
+        TPS_Users_Controller::init();
+        TPS_Audit_Controller::init();
         TPS_Login_Customizer::init();
     }
 
-    // Inicializa menus e interface do admin
-    private static function init_admin() {
-        // Usado apenas no wp-admin, evitando carregar menus no frontend.
-        if ( is_admin() ) {
-            TPS_Admin_Menus::init();
-        }
+    // Inicializa o app frontend via shortcode.
+    private static function init_frontend() {
+        TPS_Frontend_App::init();
     }
 }

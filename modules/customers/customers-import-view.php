@@ -4,12 +4,12 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-$back_url = admin_url('admin.php?page=tps-customers');
+$back_url = tps_get_page_url('tps-customers');
 ?>
 
 <div class="wrap tps-import-modern">
     <section class="tps-header">
-        <div class="tps-header-row">
+        <div class="tps-header-row tps-header-row--back">
             <a class="tps-back-btn" href="<?php echo esc_url($back_url); ?>">
                 <span class="dashicons dashicons-arrow-left-alt2" aria-hidden="true"></span>
                 <span>Voltar</span>
@@ -24,7 +24,7 @@ $back_url = admin_url('admin.php?page=tps-customers');
     <section class="tps-grid">
         <article class="tps-card">
             <h2 class="tps-title-sm">Carregar Ficheiro</h2>
-            <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <form method="post" enctype="multipart/form-data" action="<?php echo esc_url(tps_get_action_url()); ?>">
                 <input type="hidden" name="action" value="tps_import_customers">
                 <?php wp_nonce_field('tps_import_customers'); ?>
 
@@ -54,4 +54,3 @@ $back_url = admin_url('admin.php?page=tps-customers');
         </article>
     </section>
 </div>
-

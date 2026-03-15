@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-100 font-sans text-sm text-slate-800;
+  }
+}
+
+@layer components {
+  .wrap {
+    @apply mx-auto my-5 max-w-4xl rounded-2xl border border-slate-200 bg-white p-5 shadow-panel;
+  }
+
+  .toolbar {
+    @apply mb-4 flex flex-wrap items-center gap-2;
+  }
+
+  .back-btn,
+  .toolbar button {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition;
+  }
+
+  .back-btn {
+    @apply border-slate-200 bg-white text-slate-800 hover:-translate-y-0.5 hover:border-tps-200 hover:bg-tps-50 hover:text-tps-800;
+  }
+
+  .toolbar button {
+    @apply border-tps-600 bg-tps-600 text-white hover:-translate-y-0.5 hover:bg-tps-700;
+  }
+
+  .header {
+    @apply mb-5 grid gap-4 rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-tps-50 p-4 md:grid-cols-2;
+  }
+
+  .meta h2 { @apply mb-1 text-xl font-bold text-slate-900; }
+  .meta div { @apply text-sm text-slate-500; }
+  .right { @apply text-right; }
+
+  .box {
+    @apply mb-4 rounded-2xl border border-slate-200 bg-white p-4;
+  }
+
+  table {
+    @apply mt-3 w-full border-collapse;
+  }
+
+  th,
+  td {
+    @apply border border-slate-200 px-3 py-2 text-left;
+  }
+
+  th {
+    @apply bg-slate-50 text-xs uppercase tracking-wide text-slate-500;
+  }
+
+  .totals {
+    @apply ml-auto mt-4 max-w-xs;
+  }
+
+  .tps-col-qtd { width: 90px; }
+  .tps-col-unit,
+  .tps-col-subtotal { width: 120px; }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff !important; }
+  .wrap {
+    margin: 0 auto;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+  }
+}

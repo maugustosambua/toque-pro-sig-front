@@ -15,7 +15,7 @@ $methods = TPS_Payments_Model::methods();
 <div class="wrap tps-documents-modern">
     <section class="tps-header">
         <div>
-            <h1><span class="dashicons dashicons-money-alt tps-icon" aria-hidden="true"></span>Recebimentos</h1>
+            <h1>Recebimentos</h1>
             <p class="tps-subtitle">Historico de pagamentos registados e emissao de recibos.</p>
         </div>
     </section>
@@ -48,8 +48,8 @@ $methods = TPS_Payments_Model::methods();
                             <td><?php echo esc_html( (string) ( $payment->reference ? $payment->reference : '-' ) ); ?></td>
                             <td><?php echo esc_html( number_format( (float) $payment->amount, 2 ) ); ?></td>
                             <td>
-                                <a class="button button-small" href="<?php echo esc_url( admin_url( 'admin.php?page=tps-documents-add&document_id=' . (int) $payment->document_id ) ); ?>">Abrir Documento</a>
-                                <a class="button button-small" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=tps_download_payment_receipt&payment_id=' . (int) $payment->id ), 'tps_download_payment_receipt' ) ); ?>">Recibo</a>
+                                <a class="tps-row-btn" href="<?php echo esc_url( tps_get_page_url( 'tps-documents-add', array( 'document_id' => (int) $payment->document_id ) ) ); ?>">Abrir Documento</a>
+                                <a class="tps-row-btn tps-btn-primary" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => 'tps_download_payment_receipt', 'payment_id' => (int) $payment->id ), tps_get_action_url() ), 'tps_download_payment_receipt' ) ); ?>">Recibo</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

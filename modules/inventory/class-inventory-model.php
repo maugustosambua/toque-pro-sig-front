@@ -62,6 +62,8 @@ class TPS_Inventory_Model {
             return new WP_Error( 'invalid_inventory_product', 'Produto invalido para controlo de stock.' );
         }
 
+        $product_before = $product;
+
         $current_qty  = (float) $product->stock_qty;
         $current_cost = (float) $product->cost_price;
         $unit_cost    = isset( $data['unit_cost'] ) ? max( 0.0, (float) $data['unit_cost'] ) : $current_cost;
@@ -138,6 +140,7 @@ class TPS_Inventory_Model {
                 'stock_qty'   => $new_qty,
                 'cost_price'  => $new_cost,
                 'description' => $product->description,
+                '_skip_audit' => 1,
             )
         );
 
@@ -147,6 +150,24 @@ class TPS_Inventory_Model {
         }
 
         $wpdb->query( 'COMMIT' );
+
+        $product_after = TPS_Products_Services_Model::get( $product_id );
+
+        tps_audit_log(
+            'inventory_movement_created',
+            'inventory_movement',
+            (int) $wpdb->insert_id,
+            $product_before,
+            $product_after,
+            array(
+                'movement_type'  => $movement_type,
+                'quantity'       => $quantity,
+                'unit_cost'      => $unit_cost,
+                'reference_type' => $reference_type,
+                'reference_id'   => $reference_id,
+                'notes'          => $notes,
+            )
+        );
 
         return true;
     }

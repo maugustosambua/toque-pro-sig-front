@@ -332,7 +332,7 @@ class TPS_Dashboard_Controller {
                 'issue_date'    => (string) $row->issue_date,
                 'created_at'    => (string) $row->created_at,
                 'customer_name' => (string) $row->customer_name,
-                'edit_url'      => admin_url( 'admin.php?page=tps-documents-add&document_id=' . (int) $row->id ),
+                'edit_url'      => tps_get_page_url( 'tps-documents-add', array( 'document_id' => (int) $row->id ) ),
             );
         }
 

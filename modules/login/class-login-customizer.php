@@ -33,8 +33,8 @@ class TPS_Login_Customizer {
             return $redirect_to;
         }
 
-        if ( user_can( $user, 'manage_options' ) ) {
-            return admin_url( 'admin.php?page=tps-dashboard' );
+        if ( function_exists( 'tps_current_user_can_access_plugin' ) && tps_current_user_can_access_plugin( $user ) ) {
+            return tps_get_frontend_app_url( 'tps-dashboard' );
         }
 
         if ( ! empty( $requested_redirect_to ) ) {
@@ -46,8 +46,8 @@ class TPS_Login_Customizer {
 
     // Estilos da pagina de login.
     public static function enqueue_styles() {
-        $style_url = tps_get_asset_url( 'assets/css/login-modern.css' );
-        $version   = tps_get_asset_version( 'assets/css/login-modern.css' );
+        $style_url = tps_get_asset_url( 'assets/css/tailwind-login.css' );
+        $version   = tps_get_asset_version( 'assets/css/tailwind-login.css' );
 
         wp_enqueue_style( 'tps-login-modern', $style_url, array(), $version );
     }

@@ -67,6 +67,16 @@ function tps_get_notice_message( $notice_code ) {
             return 'Tipo de documento invalido.';
         case 'document_invalid_customer':
             return 'Cliente invalido. Selecione um cliente existente.';
+        case 'document_adjustment_original_required':
+            return 'Informe o documento original para criar a nota de ajuste.';
+        case 'document_adjustment_original_invalid':
+            return 'O documento original deve existir, estar emitido e nao pode ser uma cotacao ou outra nota de ajuste.';
+        case 'document_adjustment_lines_copied':
+            return 'Rascunho de nota criado com as linhas copiadas do documento original.';
+        case 'document_adjustment_lines_copy_failed':
+            return 'Rascunho de nota criado, mas nao foi possivel copiar automaticamente as linhas do documento original.';
+        case 'document_adjustment_lines_skipped':
+            return 'Rascunho de nota criado sem copia automatica das linhas. Adicione as linhas manualmente.';
         case 'document_draft_created':
             return 'Rascunho do documento criado com sucesso.';
         case 'document_not_found':
@@ -77,6 +87,16 @@ function tps_get_notice_message( $notice_code ) {
             return 'Linha removida com sucesso.';
         case 'document_line_invalid':
             return 'Nao foi possivel remover a linha. Dados invalidos.';
+        case 'document_line_tax_mode_invalid':
+            return 'Modo fiscal da linha invalido.';
+        case 'document_line_exemption_code_required':
+            return 'Selecione um codigo fiscal de isencao/nao sujeicao.';
+        case 'document_line_exemption_code_invalid':
+            return 'Codigo fiscal de isencao/nao sujeicao invalido.';
+        case 'document_line_exemption_reason_required':
+            return 'Informe o motivo da isencao ou nao sujeicao na linha.';
+        case 'document_line_fiscal_permission_denied':
+            return 'Nao tem permissao para definir linhas isentas ou nao sujeitas.';
         case 'document_locked':
             return 'Este documento esta bloqueado para edicao.';
         case 'document_issued':
@@ -85,12 +105,37 @@ function tps_get_notice_message( $notice_code ) {
             return 'Adicione pelo menos uma linha antes de emitir o documento.';
         case 'document_issue_invalid_status':
             return 'So e possivel emitir documentos em rascunho.';
+        case 'document_issue_numbering_failed':
+            return 'Nao foi possivel reservar o numero do documento. Tente novamente.';
         case 'document_cancelled':
             return 'Documento cancelado com sucesso.';
+        case 'document_cancel_reason_required':
+            return 'Informe o motivo do cancelamento.';
         case 'document_cancel_invalid_status':
             return 'So e possivel cancelar documentos emitidos.';
+        case 'document_withholding_updated':
+            return 'Retencao atualizada com sucesso.';
+        case 'document_withholding_invalid':
+            return 'A taxa de retencao deve estar entre 0 e 100.';
+        case 'document_withholding_locked':
+            return 'A retencao so pode ser alterada em documentos em rascunho.';
         case 'document_invalid_due_date':
             return 'A data de vencimento deve ser igual ou posterior a data de emissao.';
+        case 'fiscal_export_invalid_config':
+            return 'Configuracao fiscal incompleta para exportacao AT. Verifique nome da empresa, NUIT e versao do layout fiscal.';
+        case 'fiscal_export_no_documents':
+            return 'Nao existem documentos emitidos/cancelados para exportacao fiscal no filtro atual.';
+        case 'fiscal_export_invalid_structure':
+            return 'A estrutura do ficheiro fiscal AT falhou na validacao interna.';
+        case 'fiscal_month_close_invalid_period':
+            return 'Periodo fiscal invalido. Use o formato AAAA-MM.';
+        case 'fiscal_month_close_failed':
+            return 'Nao foi possivel concluir o fecho fiscal mensal.';
+        case 'fiscal_month_closed':
+            $period = isset( $_GET['period'] ) ? sanitize_text_field( wp_unslash( $_GET['period'] ) ) : '';
+            return '' !== $period ? sprintf( 'Fecho fiscal mensal concluido para %s.', $period ) : 'Fecho fiscal mensal concluido com sucesso.';
+        case 'fiscal_month_close_not_found':
+            return 'Nao existe fecho fiscal para o periodo informado. Execute o fecho antes de exportar.';
         case 'payment_invalid_document':
             return 'O recebimento so pode ser registado para documentos emitidos.';
         case 'payment_invalid_amount':
@@ -119,21 +164,36 @@ function tps_get_notice_message( $notice_code ) {
             return 'Stock insuficiente para concluir a operacao.';
         case 'inventory_issue_failed':
             return 'Nao foi possivel actualizar o stock deste documento.';
+        case 'user_created':
+            return 'Utilizador criado com sucesso.';
+        case 'user_updated':
+            return 'Utilizador atualizado com sucesso.';
+        case 'user_deleted':
+            return 'Utilizador removido com sucesso.';
+        case 'user_not_found':
+            return 'Utilizador nao encontrado.';
+        case 'user_invalid_data':
+            return 'Preencha os campos obrigatorios do utilizador.';
+        case 'user_duplicate_login':
+            return 'O nome de utilizador ja existe.';
+        case 'user_duplicate_email':
+            return 'O email informado ja esta em uso.';
+        case 'user_delete_invalid':
+            return 'Nao foi possivel remover o utilizador. ID invalido.';
+        case 'user_delete_current':
+            return 'Nao pode remover a sua propria conta a partir desta area.';
+        case 'user_delete_last_admin':
+            return 'Nao pode remover o ultimo administrador do sistema.';
         default:
             return '';
     }
 }
 
-// Mostra notificacao baseada na query string.
-function tps_render_notice_from_query() {
-    static $rendered = false;
-    if ( $rendered ) {
-        return;
-    }
-
+// Resolve os dados da notificacao com base na query string.
+function tps_get_notice_data_from_query() {
     $notice_code = isset( $_GET['tps_notice'] ) ? sanitize_key( wp_unslash( $_GET['tps_notice'] ) ) : '';
     if ( '' === $notice_code ) {
-        return;
+        return null;
     }
 
     $notice_type   = isset( $_GET['tps_notice_type'] ) ? sanitize_key( wp_unslash( $_GET['tps_notice_type'] ) ) : 'info';
@@ -146,18 +206,32 @@ function tps_render_notice_from_query() {
     if ( '' === $message ) {
         $message = tps_get_notice_message( $notice_code );
     }
+
     if ( '' === $message ) {
+        return null;
+    }
+
+    return array(
+        'type'    => $notice_type,
+        'message' => $message,
+    );
+}
+
+// Mostra notificacao baseada na query string.
+function tps_render_notice_from_query() {
+    static $rendered = false;
+    if ( $rendered ) {
+        return;
+    }
+
+    $notice = tps_get_notice_data_from_query();
+    if ( empty( $notice ) ) {
         return;
     }
 
     $rendered = true;
-    echo '<div class="notice notice-' . esc_attr( $notice_type ) . ' is-dismissible tps-top-notice"><p>' . esc_html( $message ) . '</p></div>';
+    echo '<div class="tps-notice tps-top-notice tps-notice--' . esc_attr( $notice['type'] ) . '" role="status" aria-live="polite"><p class="tps-notice__message">' . esc_html( $notice['message'] ) . '</p><button type="button" class="tps-notice-close" aria-label="Fechar aviso">&times;</button></div>';
 }
-
-// Forca exibicao no topo da pagina admin.
-add_action( 'in_admin_header', 'tps_render_notice_from_query', 1 );
-// Fallback para ecras onde o hook acima nao dispare.
-add_action( 'admin_notices', 'tps_render_notice_from_query', 1 );
 
 // Retorna linhas por pagina (global).
 function tps_get_per_page() {
@@ -191,4 +265,148 @@ function tps_get_asset_version( $relative_path ) {
     $path = tps_get_asset_path( $relative_path );
 
     return file_exists( $path ) ? (string) filemtime( $path ) : '1.0.0';
+}
+
+// Define o contexto frontend atual para montagem de URLs do plugin.
+function tps_set_frontend_context( $base_url ) {
+    $GLOBALS['tps_frontend_base_url'] = esc_url_raw( (string) $base_url );
+}
+
+// Limpa o contexto frontend atual.
+function tps_clear_frontend_context() {
+    unset( $GLOBALS['tps_frontend_base_url'] );
+}
+
+// Detecta a base da pagina frontend onde o shortcode do plugin esta montado.
+function tps_detect_frontend_base_url() {
+    $urls = array();
+
+    if ( ! empty( $GLOBALS['tps_frontend_base_url'] ) ) {
+        $urls[] = $GLOBALS['tps_frontend_base_url'];
+    }
+
+    $referer = wp_get_referer();
+    if ( $referer ) {
+        $urls[] = $referer;
+    }
+
+    if ( ! empty( $_SERVER['REQUEST_URI'] ) ) {
+        $urls[] = home_url( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+    }
+
+    $plugin_args = array(
+        'tps_view',
+        'tab',
+        'customer_id',
+        'document_id',
+        'ps_id',
+        'search',
+        'movement_type',
+        'tps_notice',
+        'tps_notice_type',
+        'tps_notice_message',
+        'imported',
+        'skipped_duplicates',
+        'skipped_invalid',
+        'col',
+        'settings-updated',
+        'payment_id',
+        'audit_page',
+        'event_type',
+        'entity_type',
+        'user_id',
+        'from_date',
+        'to_date',
+    );
+
+    foreach ( $urls as $candidate ) {
+        if ( empty( $candidate ) || ! is_string( $candidate ) ) {
+            continue;
+        }
+
+        $query = wp_parse_url( $candidate, PHP_URL_QUERY );
+        parse_str( (string) $query, $args );
+
+        if ( ! isset( $args['tps_view'] ) && empty( $GLOBALS['tps_frontend_base_url'] ) ) {
+            continue;
+        }
+
+        return remove_query_arg( $plugin_args, $candidate );
+    }
+
+    return '';
+}
+
+// Indica se o plugin deve gerar links para o frontend em vez do wp-admin.
+function tps_is_frontend_context() {
+    return '' !== tps_detect_frontend_base_url();
+}
+
+// URL base do endpoint admin-post.
+function tps_get_action_url() {
+    return admin_url( 'admin-post.php' );
+}
+
+// URL base do endpoint admin-ajax.
+function tps_get_ajax_url() {
+    return admin_url( 'admin-ajax.php' );
+}
+
+// Monta URL de uma tela do plugin, respeitando contexto admin/frontend.
+function tps_get_page_url( $page, $args = array() ) {
+    $page = sanitize_key( (string) $page );
+
+    if ( tps_is_frontend_context() ) {
+        $base_url = tps_detect_frontend_base_url();
+        $query    = array_merge( array( 'tps_view' => $page ), $args );
+
+        return add_query_arg( $query, $base_url );
+    }
+
+    $query = array_merge( array( 'page' => $page ), $args );
+
+    return add_query_arg( $query, admin_url( 'admin.php' ) );
+}
+
+// URL de uma aba das configuracoes.
+function tps_get_settings_tab_url( $tab ) {
+    return tps_get_page_url( 'tps-settings', array( 'tab' => sanitize_key( (string) $tab ) ) );
+}
+
+// Resolve a URL publica do app frontend com base na pagina que contem o shortcode.
+function tps_get_frontend_app_url( $page = 'tps-dashboard', $args = array() ) {
+    global $wpdb;
+
+    $page = sanitize_key( (string) $page );
+
+    $base_url = '';
+    if ( ! empty( $GLOBALS['tps_frontend_base_url'] ) && is_string( $GLOBALS['tps_frontend_base_url'] ) ) {
+        $base_url = $GLOBALS['tps_frontend_base_url'];
+    }
+
+    if ( '' === $base_url ) {
+        $shortcode_like = '%' . $wpdb->esc_like( '[tps_frontend' ) . '%';
+        $post_id        = (int) $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT ID
+                FROM {$wpdb->posts}
+                WHERE post_status = 'publish'
+                    AND post_type IN ('page', 'post')
+                    AND post_content LIKE %s
+                ORDER BY post_type = 'page' DESC, ID ASC
+                LIMIT 1",
+                $shortcode_like
+            )
+        );
+
+        if ( $post_id > 0 ) {
+            $base_url = get_permalink( $post_id );
+        }
+    }
+
+    if ( ! $base_url ) {
+        return tps_get_page_url( $page, $args );
+    }
+
+    return add_query_arg( array_merge( array( 'tps_view' => $page ), $args ), $base_url );
 }

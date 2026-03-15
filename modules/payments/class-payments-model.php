@@ -33,6 +33,9 @@ class TPS_Payments_Model {
     public static function record_payment( $data ) {
         global $wpdb;
 
+        $document_id      = (int) $data['document_id'];
+        $document_before  = TPS_Documents_Model::get( $document_id );
+
         $wpdb->query( 'START TRANSACTION' );
 
         $inserted = $wpdb->insert(
@@ -83,7 +86,31 @@ class TPS_Payments_Model {
             return false;
         }
 
-        TPS_Documents_Model::sync_payment_totals( (int) $data['document_id'] );
+        TPS_Documents_Model::sync_payment_totals( $document_id );
+
+        $document_after = TPS_Documents_Model::get( $document_id );
+
+        tps_audit_log(
+            'payment_recorded',
+            'payment',
+            $payment_id,
+            null,
+            array(
+                'payment_id'    => $payment_id,
+                'document_id'   => $document_id,
+                'customer_id'   => (int) $data['customer_id'],
+                'payment_date'  => (string) $data['payment_date'],
+                'amount'        => (float) $data['amount'],
+                'method'        => (string) $data['method'],
+                'reference'     => (string) $data['reference'],
+                'notes'         => (string) $data['notes'],
+            ),
+            array(
+                'document_before' => $document_before,
+                'document_after'  => $document_after,
+            )
+        );
+
         $wpdb->query( 'COMMIT' );
 
         return $payment_id;

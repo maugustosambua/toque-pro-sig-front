@@ -18,12 +18,14 @@ $normal_count   = max( 0, $tracked_total - $critical_count );
 
 <div class="wrap tps-products-modern tps-inventory-modern">
     <section class="tps-header">
-        <div>
-            <h1><span class="dashicons dashicons-archive tps-icon" aria-hidden="true"></span>Stock</h1>
-            <p class="tps-subtitle">Controle de saldo, custo medio e alertas de stock minimo com o mesmo padrao visual do sistema.</p>
-        </div>
-        <div class="tps-actions">
-            <a href="<?php echo esc_url( admin_url( 'admin.php?page=tps-stock-movements' ) ); ?>" class="tps-btn tps-btn-secondary">Ver Movimentos</a>
+        <div class="tps-title-row">
+            <div>
+                <h1>Stock</h1>
+                <p class="tps-subtitle">Controle de saldo, custo medio e alertas de stock minimo com o mesmo padrao visual do sistema.</p>
+            </div>
+            <div class="tps-actions">
+                <a href="<?php echo esc_url( tps_get_page_url( 'tps-stock-movements' ) ); ?>" class="tps-btn tps-btn-secondary">Ver Movimentos</a>
+            </div>
         </div>
     </section>
 
@@ -46,12 +48,12 @@ $normal_count   = max( 0, $tracked_total - $critical_count );
         <article class="tps-panel">
             <div class="tps-panel-head">
                 <div>
-                    <h2 class="tps-panel-title"><span class="dashicons dashicons-randomize tps-icon" aria-hidden="true"></span>Novo Movimento</h2>
+                    <h2 class="tps-panel-title">Novo Movimento</h2>
                     <p class="tps-panel-subtitle">Use entrada, saida manual ou ajuste para corrigir o saldo real.</p>
                 </div>
             </div>
 
-            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="tps-inventory-form">
+            <form method="post" action="<?php echo esc_url( tps_get_action_url() ); ?>" class="tps-inventory-form">
                 <?php wp_nonce_field( 'tps_save_inventory_movement' ); ?>
                 <input type="hidden" name="action" value="tps_save_inventory_movement">
 
@@ -61,6 +63,7 @@ $normal_count   = max( 0, $tracked_total - $critical_count );
                         <div class="tps-search-wrap">
                             <input
                                 id="tps-inventory-product-search"
+                                class="tps-input"
                                 type="text"
                                 autocomplete="off"
                                 placeholder="Pesquisar por nome ou SKU"
@@ -69,14 +72,13 @@ $normal_count   = max( 0, $tracked_total - $critical_count );
                             <input id="tps-inventory-product" type="hidden" name="product_id" required>
                             <div id="tps-inventory-product-results" class="tps-search-results" hidden></div>
                         </div>
-                        <div id="tps-inventory-product-selected" class="tps-selected-customer"></div>
                         <?php if ( empty( $items ) ) : ?>
-                            <p class="tps-selected-customer">Nenhum produto com controlo de stock disponivel.</p>
+                            <p class="tps-inline-meta">Nenhum produto com controlo de stock disponivel.</p>
                         <?php endif; ?>
                     </div>
                     <div>
                         <label for="tps-inventory-type">Tipo</label>
-                        <select id="tps-inventory-type" name="movement_type" required>
+                        <select id="tps-inventory-type" class="tps-select" name="movement_type" required>
                             <option value="in">Entrada Manual</option>
                             <option value="out">Saida Manual</option>
                             <option value="adjustment">Ajuste de Inventario</option>
@@ -84,23 +86,23 @@ $normal_count   = max( 0, $tracked_total - $critical_count );
                     </div>
                     <div>
                         <label for="tps-inventory-quantity">Quantidade</label>
-                        <input id="tps-inventory-quantity" type="number" step="0.01" min="0.01" name="quantity" value="1">
+                        <input id="tps-inventory-quantity" class="tps-input" type="number" step="0.01" min="0.01" name="quantity" value="1">
                     </div>
                     <div>
                         <label for="tps-inventory-target">Saldo Final</label>
-                        <input id="tps-inventory-target" type="number" step="0.01" min="0" name="target_qty" value="0">
+                        <input id="tps-inventory-target" class="tps-input" type="number" step="0.01" min="0" name="target_qty" value="0">
                     </div>
                     <div>
                         <label for="tps-inventory-cost">Custo Unitario</label>
-                        <input id="tps-inventory-cost" type="number" step="0.01" min="0" name="unit_cost" value="0.00">
+                        <input id="tps-inventory-cost" class="tps-input" type="number" step="0.01" min="0" name="unit_cost" value="0.00">
                     </div>
                     <div>
                         <label for="tps-inventory-date">Data</label>
-                        <input id="tps-inventory-date" type="datetime-local" name="movement_date" value="<?php echo esc_attr( wp_date( 'Y-m-d\TH:i' ) ); ?>">
+                        <input id="tps-inventory-date" class="tps-input" type="datetime-local" name="movement_date" value="<?php echo esc_attr( wp_date( 'Y-m-d\TH:i' ) ); ?>">
                     </div>
                     <div class="tps-field-full">
                         <label for="tps-inventory-notes">Notas</label>
-                        <textarea id="tps-inventory-notes" name="notes" rows="3" placeholder="Ex.: contagem fisica, compra local, devolucao do cliente"></textarea>
+                        <textarea id="tps-inventory-notes" class="tps-textarea" name="notes" rows="3" placeholder="Ex.: contagem fisica, compra local, devolucao do cliente"></textarea>
                     </div>
                 </div>
 

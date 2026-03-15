@@ -13,12 +13,12 @@ if ( ! file_exists( $wp_load ) ) {
 
 require_once $wp_load;
 
-// Carrega funções de plugin/admin
+// Carrega funções do plugin
 require_once ABSPATH . 'wp-admin/includes/plugin.php';
 
 // Tenta incluir o plugin
-$plugin_file = 'toque-pro-sig/toque-pro-sig.php';
-$plugin_path = WP_PLUGIN_DIR . '/toque-pro-sig/toque-pro-sig.php';
+$plugin_file = 'toque-pro-sig-front/toque-pro-sig.php';
+$plugin_path = WP_PLUGIN_DIR . '/toque-pro-sig-front/toque-pro-sig.php';
 if ( ! file_exists( $plugin_path ) ) {
     echo "Plugin não encontrado em: $plugin_path\n";
     exit(1);

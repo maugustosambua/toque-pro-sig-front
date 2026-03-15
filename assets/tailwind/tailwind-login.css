@@ -1,0 +1,260 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --tps-bg: #f7f7fb;
+    --tps-surface: #ffffff;
+    --tps-surface-soft: #fcfcfe;
+    --tps-surface-muted: #f2f4fb;
+    --tps-border: #e4e8f2;
+    --tps-border-strong: #d7deeb;
+    --tps-text: #243042;
+    --tps-text-soft: #5f6f86;
+    --tps-text-muted: #7f8ba1;
+    --tps-accent: #9db8ff;
+    --tps-accent-strong: #7e9df2;
+    --tps-accent-soft: #edf2ff;
+    --tps-success-soft: #eaf8f1;
+    --tps-danger-soft: #fdeef1;
+    --tps-warning-soft: #fff8e8;
+    --tps-shadow-xs: 0 1px 2px rgba(36, 48, 66, 0.04);
+    --tps-shadow-sm: 0 4px 12px rgba(36, 48, 66, 0.06);
+    --tps-shadow-md: 0 10px 24px rgba(36, 48, 66, 0.08);
+    --tps-radius-lg: 16px;
+    --tps-radius-md: 12px;
+    --tps-radius-sm: 8px;
+    --tps-transition: 160ms ease;
+  }
+
+  body.login {
+    @apply min-h-screen px-4 py-6 font-sans;
+    background:
+      radial-gradient(circle at top right, rgba(157, 184, 255, 0.22), transparent 26%),
+      radial-gradient(circle at bottom left, rgba(126, 157, 242, 0.14), transparent 24%),
+      var(--tps-bg);
+    color: var(--tps-text);
+  }
+
+  body.login::before,
+  .login h1,
+  .login h1 a,
+  #backtoblog {
+    display: none !important;
+  }
+
+  body.login div#login_error,
+  body.login .message,
+  body.login .notice {
+    border: 1px solid transparent;
+  }
+}
+
+@layer components {
+  .login {
+    @apply flex min-h-screen flex-col items-center justify-center;
+  }
+
+  .login #login {
+    @apply order-1 mx-auto w-full max-w-md p-0;
+    animation: tps-login-enter 420ms ease-out;
+  }
+
+  .login #login::before {
+    content: 'Toque Pro SiG';
+    @apply mb-2 block text-center text-3xl font-bold;
+    color: var(--tps-text);
+    letter-spacing: -0.03em;
+  }
+
+  .login #login::after {
+    content: 'Acesso seguro ao ambiente de gestão';
+    @apply mb-5 block text-center text-sm;
+    color: var(--tps-text-soft);
+    letter-spacing: 0;
+  }
+
+  .login form {
+    @apply mt-0 p-6;
+    border: 1px solid var(--tps-border);
+    border-radius: var(--tps-radius-lg);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: var(--tps-shadow-md);
+    backdrop-filter: blur(12px);
+  }
+
+  .login label {
+    @apply mb-1 block pl-6 text-sm font-semibold;
+    color: var(--tps-text);
+    position: relative;
+  }
+
+  .login label[for='user_login']::before,
+  .login label[for='user_pass']::before {
+    position: absolute;
+    left: 0;
+    top: -1px;
+    font-family: dashicons;
+    font-size: 16px;
+    line-height: 1;
+    color: #6c81bb;
+  }
+
+  .login label[for='user_login']::before { content: '\f110'; }
+  .login label[for='user_pass']::before { content: '\f160'; }
+
+  .login form .input,
+  .login input[type='text'],
+  .login input[type='password'] {
+    @apply min-h-11 w-full px-3 py-2 text-sm shadow-none outline-none transition;
+    border: 1px solid var(--tps-border);
+    border-radius: var(--tps-radius-md);
+    background: var(--tps-surface);
+    color: var(--tps-text);
+    box-shadow: var(--tps-shadow-xs);
+  }
+
+  .login form .input:focus,
+  .login input[type='text']:focus,
+  .login input[type='password']:focus {
+    border-color: var(--tps-accent-strong);
+    background: var(--tps-surface-soft);
+    box-shadow: 0 0 0 4px rgba(157, 184, 255, 0.18);
+  }
+
+  .login input[type='checkbox'] {
+    @apply inline-block align-middle;
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+    margin-right: 0.5rem;
+    border-color: var(--tps-border-strong);
+    border-radius: 4px;
+  }
+
+  .login form p {
+    @apply mb-4;
+  }
+
+  .login .button.wp-hide-pw {
+    @apply transition;
+    color: var(--tps-text-soft);
+  }
+
+  .login .button.wp-hide-pw:hover {
+    background: var(--tps-surface-muted);
+    color: var(--tps-text);
+  }
+
+  .login .forgetmenot,
+  .login .submit {
+    @apply float-none clear-both;
+  }
+
+  .login .forgetmenot label {
+    @apply flex items-center pl-0 font-medium;
+    color: var(--tps-text-soft);
+    gap: 0;
+    line-height: 1.2;
+  }
+
+  .login .button-primary,
+  .login .submit .button-primary,
+  .login #wp-submit {
+    @apply w-full px-4 font-bold transition;
+    min-height: 3rem !important;
+    height: 3rem !important;
+    padding-top: 0.6rem !important;
+    padding-bottom: 0.6rem !important;
+    line-height: 1.1 !important;
+    border: 1px solid #d7e2ff;
+    border-radius: var(--tps-radius-md);
+    background: #eef3ff;
+    color: #4f67b3;
+    box-shadow: none;
+    letter-spacing: 0;
+  }
+
+  .login .button-primary:hover,
+  .login .button-primary:focus,
+  .login .submit .button-primary:hover,
+  .login .submit .button-primary:focus,
+  .login #wp-submit:hover,
+  .login #wp-submit:focus {
+    transform: translateY(-1px);
+    border-color: #c7d5fb;
+    background: #e6edff;
+    color: #465da7;
+    box-shadow: var(--tps-shadow-sm);
+  }
+
+  .login .button-primary:focus,
+  .login .submit .button-primary:focus,
+  .login #wp-submit:focus {
+    outline: none;
+  }
+
+  .login #nav,
+  .language-switcher {
+    @apply relative z-10 mx-auto mt-3 w-full max-w-md text-center;
+  }
+
+  .login #nav a,
+  .login #backtoblog a {
+    @apply font-medium transition;
+    color: var(--tps-text-soft);
+  }
+
+  .login #nav a:hover,
+  .login #backtoblog a:hover {
+    color: var(--tps-text);
+  }
+
+  .login .message,
+  .login .notice,
+  .login #login_error {
+    @apply mx-auto mb-4 w-full max-w-md p-4;
+    border-left-width: 4px;
+    border-radius: var(--tps-radius-md);
+    background: var(--tps-surface);
+    box-shadow: var(--tps-shadow-xs);
+  }
+
+  .login .message {
+    border-left-color: #9cd4b0;
+    background: var(--tps-success-soft);
+  }
+
+  .login .notice {
+    border-left-color: #efd998;
+    background: var(--tps-warning-soft);
+  }
+
+  .login #login_error {
+    border-left-color: #ecb5c2;
+    background: var(--tps-danger-soft);
+  }
+
+  .language-switcher form {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-2;
+    border: 1px solid var(--tps-border);
+    border-radius: var(--tps-radius-md);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: var(--tps-shadow-xs);
+  }
+
+  .language-switcher,
+  .language-switcher form,
+  #language-switcher,
+  #language-switcher-locales,
+  .login .language-switcher {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+@keyframes tps-login-enter {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}

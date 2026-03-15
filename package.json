@@ -1,0 +1,13 @@
+{
+  "name": "toque-pro-sig-front",
+  "private": true,
+  "scripts": {
+    "build:app": "tailwindcss -i ./assets/tailwind/tailwind-ui.css -o ./assets/css/tailwind-ui.css --minify",
+    "build:login": "tailwindcss -i ./assets/tailwind/tailwind-login.css -o ./assets/css/tailwind-login.css --minify",
+    "build:print": "tailwindcss -i ./assets/tailwind/tailwind-print.css -o ./assets/css/document-print.css --minify",
+    "build": "npm run build:app && npm run build:login && npm run build:print"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

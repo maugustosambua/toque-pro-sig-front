@@ -56,7 +56,7 @@ foreach ( $data['charts']['type_breakdown'] as $type_row ) {
 
 <div class="wrap tps-dashboard-modern">
     <section class="tps-header">
-        <h1><span class="dashicons dashicons-chart-area" aria-hidden="true"></span> Painel ERP</h1>
+        <h1>Painel ERP</h1>
         <p class="tps-subtitle">Visão executiva com comparativos de faturação, documentos, clientes e desempenho comercial.</p>
     </section>
 
@@ -122,7 +122,7 @@ foreach ( $data['charts']['type_breakdown'] as $type_row ) {
             <p class="tps-kpi-value"><?php echo esc_html( $format_int( $kpis['critical_products'] ) ); ?></p>
             <div class="tps-kpi-meta">
                 <span>Produtos abaixo do minimo</span>
-                <span><a href="<?php echo esc_url( admin_url( 'admin.php?page=tps-inventory' ) ); ?>">Abrir Stock</a></span>
+                <span><a href="<?php echo esc_url( tps_get_page_url( 'tps-inventory' ) ); ?>">Abrir Stock</a></span>
             </div>
         </article>
     </section>
@@ -135,6 +135,7 @@ foreach ( $data['charts']['type_breakdown'] as $type_row ) {
         </article>
         <article class="tps-panel">
             <h2 class="tps-panel-title"><span class="dashicons dashicons-chart-pie tps-icon" aria-hidden="true"></span>Distribuição por Estado</h2>
+            <p class="tps-legend">Resumo do volume de documentos por estado no período atual.</p>
             <div class="tps-status-list">
                 <div class="tps-bar-row">
                     <div class="tps-bar-label">Emitido</div>
@@ -152,7 +153,10 @@ foreach ( $data['charts']['type_breakdown'] as $type_row ) {
                     <div class="tps-bar-value"><?php echo esc_html( $format_int( $data['charts']['status_breakdown']['cancelled'] ) ); ?></div>
                 </div>
             </div>
-            <h2 class="tps-panel-title tps-mt-18"><span class="dashicons dashicons-filter tps-icon" aria-hidden="true"></span>Comparação por Tipo (Mês Atual)</h2>
+            <div class="tps-dashboard-subsection">
+                <h3 class="tps-dashboard-subsection-title"><span class="dashicons dashicons-filter tps-icon" aria-hidden="true"></span>Comparação por Tipo (Mês Atual)</h3>
+                <p class="tps-muted">Comparativo do total faturado por tipo de documento no mês corrente.</p>
+            </div>
             <div class="tps-type-list">
                 <?php foreach ( $data['charts']['type_breakdown'] as $row ) : ?>
                     <?php $ratio = ( (float) $row['total'] / $type_max ) * 100; ?>
@@ -167,8 +171,13 @@ foreach ( $data['charts']['type_breakdown'] as $type_row ) {
     </section>
 
     <section class="tps-grid-tables">
-        <article class="tps-panel">
-            <h2 class="tps-panel-title"><span class="dashicons dashicons-star-filled tps-icon" aria-hidden="true"></span>Top Clientes (Últimos 90 dias)</h2>
+        <article class="tps-table-shell tps-dashboard-card tps-dashboard-table-card">
+            <div class="tps-section-head tps-dashboard-card-head">
+                <div>
+                    <h2 class="tps-section-title"><span class="dashicons dashicons-star-filled tps-icon" aria-hidden="true"></span>Top Clientes (Últimos 90 dias)</h2>
+                    <p class="tps-section-subtitle">Ranking comercial com os clientes que mais faturaram no período recente.</p>
+                </div>
+            </div>
             <?php if ( empty( $data['top_customers'] ) ) : ?>
                 <p class="tps-empty">Sem faturação emitida no período.</p>
             <?php else : ?>
@@ -189,8 +198,13 @@ foreach ( $data['charts']['type_breakdown'] as $type_row ) {
                 </table>
             <?php endif; ?>
         </article>
-        <article class="tps-panel">
-            <h2 class="tps-panel-title"><span class="dashicons dashicons-clock tps-icon" aria-hidden="true"></span>Documentos Recentes</h2>
+        <article class="tps-table-shell tps-dashboard-card tps-dashboard-table-card">
+            <div class="tps-section-head tps-dashboard-card-head">
+                <div>
+                    <h2 class="tps-section-title"><span class="dashicons dashicons-clock tps-icon" aria-hidden="true"></span>Documentos Recentes</h2>
+                    <p class="tps-section-subtitle">Últimos documentos criados para facilitar o acompanhamento operacional.</p>
+                </div>
+            </div>
             <?php if ( empty( $data['recent_documents'] ) ) : ?>
                 <p class="tps-empty">Ainda sem documentos.</p>
             <?php else : ?>
@@ -205,15 +219,20 @@ foreach ( $data['charts']['type_breakdown'] as $type_row ) {
                                 <td><?php echo esc_html( $row['type_label'] ); ?></td>
                                 <td><?php echo esc_html( $row['customer_name'] ? $row['customer_name'] : '-' ); ?></td>
                                 <td><span class="tps-status-pill tps-status-<?php echo esc_attr( $row['status'] ); ?>"><?php echo esc_html( $status_labels[ $row['status'] ] ?? $row['status'] ); ?></span></td>
-                                <td><a href="<?php echo esc_url( $row['edit_url'] ); ?>">Abrir</a></td>
+                                <td class="tps-actions-col"><a class="tps-row-btn" href="<?php echo esc_url( $row['edit_url'] ); ?>"><span class="dashicons dashicons-edit" aria-hidden="true"></span>Abrir</a></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             <?php endif; ?>
         </article>
-        <article class="tps-panel">
-            <h2 class="tps-panel-title"><span class="dashicons dashicons-warning tps-icon" aria-hidden="true"></span>Produtos Criticos</h2>
+        <article class="tps-table-shell tps-dashboard-card tps-dashboard-table-card">
+            <div class="tps-section-head tps-dashboard-card-head">
+                <div>
+                    <h2 class="tps-section-title"><span class="dashicons dashicons-warning tps-icon" aria-hidden="true"></span>Produtos Criticos</h2>
+                    <p class="tps-section-subtitle">Itens abaixo do stock mínimo para ação rápida da equipa.</p>
+                </div>
+            </div>
             <?php if ( empty( $data['critical_products'] ) ) : ?>
                 <p class="tps-empty">Sem alertas de stock minimo.</p>
             <?php else : ?>

@@ -14,7 +14,7 @@ class TPS_Inventory_Controller {
 
     // Pesquisa produtos controlados por stock para o formulario de movimentos.
     public static function search_products_ajax() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'admin' ) ) {
             wp_send_json_error( array( 'message' => 'Permissao negada.' ), 403 );
         }
 
@@ -60,13 +60,13 @@ class TPS_Inventory_Controller {
 
     // Regista movimento manual de stock.
     public static function save_movement() {
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if ( ! tps_current_user_can( 'admin' ) ) {
             wp_die( 'Sem permissao para executar esta accao.' );
         }
 
         check_admin_referer( 'tps_save_inventory_movement' );
 
-        $redirect = admin_url( 'admin.php?page=tps-inventory' );
+        $redirect = tps_get_page_url( 'tps-inventory' );
 
         $product_id     = isset( $_POST['product_id'] ) ? (int) $_POST['product_id'] : 0;
         $movement_type  = isset( $_POST['movement_type'] ) ? sanitize_key( wp_unslash( $_POST['movement_type'] ) ) : '';
